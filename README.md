@@ -202,7 +202,7 @@ Four roles with strictly enforced permissions:
 ### SUPER_ADMIN_VIEWER ("Super Admin (Read-only)")
 - Sees everything a Super Admin sees (dashboard, companies, sub companies, devices, users, activity logs) but **cannot change anything** — no create, edit, deactivate, allocate or delete
 - Created only by a Super Admin from **Users → Add User → Role: Super Admin (Read-only)**; platform-level, so it has no company or sub company
-- Can edit their own name / phone and change their own password
+- No My Profile page: Super Admin roles do not get edit profile or change password in the UI
 - Demo account: `viewer@example.com` / `password123`
 
 ### ADMIN

@@ -72,7 +72,6 @@ export const router = createBrowserRouter([
               { path: 'devices/:deviceId', element: <DeviceDetailPage /> },
               { path: 'users', element: <UsersPage /> },
               { path: 'activity-logs', element: <ActivityLogsPage /> },
-              { path: 'profile', element: <ProfilePage /> },
             ],
           },
         ],

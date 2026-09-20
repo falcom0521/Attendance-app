@@ -16,7 +16,7 @@ import { ThemeToggle } from '@/components/ui/ThemeToggle';
 
 // Demo accounts are kept for the mock phase. Remove this block (and the panel below) when real auth is live.
 const DEMO_ACCOUNTS = [
-  { role: 'Super Admin', description: 'Platform-wide access', email: 'superadmin@example.com', password: 'password123', icon: Shield },
+  // { role: 'Super Admin', description: 'Platform-wide access', email: 'superadmin@example.com', password: 'password123', icon: Shield },
   { role: 'Super Admin (Read-only)', description: 'View only', email: 'viewer@example.com', password: 'password123', icon: Eye },
   { role: 'Admin', description: 'All sub companies', email: 'admin@example.com', password: 'password123', icon: Users },
   { role: 'HR', description: 'One sub company', email: 'hr@example.com', password: 'password123', icon: Clock },

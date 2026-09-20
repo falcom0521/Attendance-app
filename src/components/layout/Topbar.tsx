@@ -34,7 +34,7 @@ export function Topbar({ contextLabel }: TopbarProps) {
     navigate('/login');
   }
 
-  const profilePath = isSuperAdminRole(user?.role) ? '/super-admin/profile' : user?.role === 'ADMIN' ? '/admin/profile' : '/hr/profile';
+  const profilePath = user?.role === 'ADMIN' ? '/admin/profile' : '/hr/profile';
 
   return (
     <header className="h-[60px] bg-card border-b border-surface-200 flex items-center justify-between px-4 gap-4 flex-shrink-0">
@@ -84,14 +84,17 @@ export function Topbar({ contextLabel }: TopbarProps) {
                 <p className="text-sm font-semibold text-surface-900">{user?.firstName} {user?.lastName}</p>
                 <p className="text-xs text-surface-500">{user?.email}</p>
               </div>
-              <button
-                onClick={() => { setProfileOpen(false); navigate(profilePath); }}
-                className="flex items-center gap-2.5 w-full px-4 py-2.5 text-sm text-surface-700 hover:bg-surface-50 transition-colors"
-              >
-                <User className="h-4 w-4 text-surface-400" />
-                My Profile
-              </button>
-              <div className="border-t border-surface-100 mt-1 pt-1">
+              {/* Super Admin roles have no profile page (no edit profile / change password). */}
+              {!isSuperAdminRole(user?.role) && (
+                <button
+                  onClick={() => { setProfileOpen(false); navigate(profilePath); }}
+                  className="flex items-center gap-2.5 w-full px-4 py-2.5 text-sm text-surface-700 hover:bg-surface-50 transition-colors"
+                >
+                  <User className="h-4 w-4 text-surface-400" />
+                  My Profile
+                </button>
+              )}
+              <div className={isSuperAdminRole(user?.role) ? 'py-0.5' : 'border-t border-surface-100 mt-1 pt-1'}>
                 <button
                   onClick={handleLogout}
                   className="flex items-center gap-2.5 w-full px-4 py-2.5 text-sm text-danger-600 hover:bg-danger-50 transition-colors"

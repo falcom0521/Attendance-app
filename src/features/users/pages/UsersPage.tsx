@@ -21,7 +21,7 @@ const ROLE_OPTIONS = [
   { label: 'All Roles', value: '' },
   { label: 'Admin', value: 'ADMIN' },
   { label: 'HR', value: 'HR' },
-  { label: 'Super Admin (Read-only)', value: 'SUPER_ADMIN_VIEWER' },
+  // { label: 'Super Admin (Read-only)', value: 'SUPER_ADMIN_VIEWER' },
 ];
 
 const STATUS_OPTIONS = [

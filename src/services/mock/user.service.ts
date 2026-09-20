@@ -4,7 +4,7 @@ import { mockUsers } from '@/mocks/data/users';
 import { mockSubCompanies } from '@/mocks/data/subCompanies';
 import { sleep } from '@/lib/utils';
 import { assertWritable } from './writeGuard';
-import { getActivityActorId, getActivityActorRole, logActivity } from './activityLog.service';
+import { getActivityActorRole, logActivity } from './activityLog.service';
 
 // eslint-disable-next-line prefer-const
 let users: AppUser[] = [...mockUsers];
@@ -100,14 +100,7 @@ export const userService = {
   },
 
   async updateUser(id: string, payload: Partial<CreateUserPayload>): Promise<AppUser> {
-    // A read-only user may still edit their own name and phone (My Profile), and nothing else.
-    const editingSelfAsViewer = getActivityActorRole() === VIEWER && getActivityActorId() === id;
-    if (editingSelfAsViewer) {
-      const { firstName, lastName, phone } = payload;
-      payload = { firstName, lastName, phone };
-    } else {
-      assertWritable();
-    }
+    assertWritable();
     await sleep(500);
     const idx = users.findIndex((u) => u.id === id);
     if (idx === -1) throw new Error('User not found');
