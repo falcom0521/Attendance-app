@@ -15,6 +15,7 @@ import { useSubCompanyScope } from '@/hooks/useSubCompanyScope';
 import { useActor } from '@/hooks/useActor';
 import { todayISO, formatDate } from '@/utils/date';
 import { cn } from '@/lib/utils';
+import { pastOrTodayDate, reasonField } from '@/lib/validation';
 
 // ── Validation schema ────────────────────────────────────────────────────────
 const punchPairSchema = z.object({
@@ -29,12 +30,24 @@ const punchPairSchema = z.object({
 
 const schema = z.object({
   employeeId: z.string().min(1, 'Select an employee'),
-  date:       z.string().min(1, 'Date is required').refine(
-    (d) => d <= todayISO(),
-    { message: 'Date cannot be in the future' }
-  ),
+  date:       pastOrTodayDate('Date'),
   punches: z.array(punchPairSchema).min(1, 'At least one punch entry is required'),
-  reason: z.string().min(5, 'Please provide a reason (min 5 characters)'),
+  reason: reasonField(5, 300),
+}).superRefine((v, ctx) => {
+  // Pairs must not overlap: sort by punch-in and check each against the previous pair.
+  const rows = v.punches
+    .map((p, index) => ({ ...p, index }))
+    .filter((p) => p.punchIn)
+    .sort((a, b) => a.punchIn.localeCompare(b.punchIn));
+  for (let i = 1; i < rows.length; i++) {
+    const prev = rows[i - 1]!;
+    const cur = rows[i]!;
+    if (!prev.punchOut) {
+      ctx.addIssue({ code: 'custom', path: ['punches', prev.index, 'punchOut'], message: 'Add a punch-out before starting another pair' });
+    } else if (cur.punchIn < prev.punchOut) {
+      ctx.addIssue({ code: 'custom', path: ['punches', cur.index, 'punchIn'], message: 'Overlaps another punch pair' });
+    }
+  }
 });
 
 type FormData = z.infer<typeof schema>;
@@ -80,7 +93,7 @@ export function ManualAttendanceDialog({ open, onClose, initial, editing = false
     setValue,
     reset,
     formState: { errors },
-  } = useForm<FormData>({ resolver: zodResolver(schema), defaultValues: EMPTY_FORM });
+  } = useForm<FormData>({ resolver: zodResolver(schema), mode: 'onTouched', defaultValues: EMPTY_FORM });
 
   const { fields, append, remove } = useFieldArray({ control, name: 'punches' });
   const watchedDate = watch('date');
@@ -167,7 +180,7 @@ export function ManualAttendanceDialog({ open, onClose, initial, editing = false
         </>
       }
     >
-      <form id="manual-att-form" onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+      <form noValidate id="manual-att-form" onSubmit={handleSubmit(onSubmit)} className="space-y-5">
 
         {/* Info banner */}
         <div className="flex gap-2.5 p-3 bg-info-50 border border-info-100 rounded-xl">
@@ -311,6 +324,7 @@ export function ManualAttendanceDialog({ open, onClose, initial, editing = false
           </label>
           <textarea
             rows={3}
+            maxLength={300}
             placeholder="e.g. Device was offline, employee forgot to punch out…"
             className={cn(
               'form-input resize-none text-sm',

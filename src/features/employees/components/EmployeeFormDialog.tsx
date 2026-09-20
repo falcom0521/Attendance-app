@@ -13,23 +13,25 @@ import { useDepartments } from '@/features/configuration/hooks/useDepartments';
 import { useSubCompanyScope } from '@/hooks/useSubCompanyScope';
 import { useAuthStore } from '@/store/authStore';
 import type { Employee } from '@/types/employee';
+import { requiredText, personName, codeField, emailField, phoneField, birthDateField, dateWithinFuture } from '@/lib/validation';
 
 const schema = z.object({
-  employeeCode: z.string().min(1, 'Required'),
-  firstName: z.string().min(1, 'Required'),
-  lastName: z.string().min(1, 'Required'),
-  email: z.string().email('Invalid email'),
-  phone: z.string().min(7, 'Required'),
-  dateOfBirth: z.string().min(1, 'Required'),
-  address: z.string().min(5, 'Required'),
-  department: z.string().min(1, 'Required'),
-  designation: z.string().min(1, 'Required'),
+  employeeCode: codeField('Employee code', 2, 20),
+  firstName: personName('First name'),
+  lastName: personName('Last name'),
+  email: emailField,
+  phone: phoneField,
+  dateOfBirth: birthDateField(16),
+  address: requiredText('Address', { min: 5, max: 200 }),
+  department: z.string().min(1, 'Select a department'),
+  designation: requiredText('Designation', { min: 2, max: 60 }),
   employeeType: z.enum(['FULL_TIME', 'PART_TIME', 'CONTRACT', 'INTERN']),
-  joiningDate: z.string().min(1, 'Required'),
+  joiningDate: dateWithinFuture('Joining date', 90),
   status: z.enum(['ACTIVE', 'INACTIVE']),
-  subCompanyId: z.string().min(1, 'Required'),
+  subCompanyId: z.string().min(1, 'Select a sub company'),
   shiftId: z.string().optional(),
 });
+
 type FormData = z.infer<typeof schema>;
 
 const TYPE_OPTIONS = [
@@ -56,6 +58,7 @@ export function EmployeeFormDialog({ open, onClose, employee }: { open: boolean;
 
   const { register, handleSubmit, reset, watch, setValue, formState: { errors, isSubmitting } } = useForm<FormData>({
     resolver: zodResolver(schema),
+    mode: 'onTouched',
     defaultValues: { status: 'ACTIVE', employeeType: 'FULL_TIME', subCompanyId: scope.subCompanyId ?? '' },
   });
 
@@ -93,7 +96,7 @@ export function EmployeeFormDialog({ open, onClose, employee }: { open: boolean;
     <Dialog open={open} onClose={onClose} title={isEdit ? 'Edit Employee' : 'Add Employee'} size="2xl"
       footer={<><Button variant="outline" onClick={onClose}>Cancel</Button><Button form="emp-form" type="submit" loading={isSubmitting}>{isEdit ? 'Save' : 'Create'}</Button></>}
     >
-      <form id="emp-form" onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+      <form noValidate id="emp-form" onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         <div>
           <h4 className="text-sm font-semibold text-surface-700 mb-3">Basic Information</h4>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

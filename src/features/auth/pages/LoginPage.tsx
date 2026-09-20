@@ -16,6 +16,7 @@ import { cn } from '@/lib/utils';
 // Demo accounts are kept for the mock phase. Remove this block (and the panel below) when real auth is live.
 const DEMO_ACCOUNTS = [
   { role: 'Super Admin', description: 'Platform-wide access', email: 'superadmin@example.com', password: 'password123', icon: Shield },
+  { role: 'Super Admin (Read-only)', description: 'View only', email: 'viewer@example.com', password: 'password123', icon: Eye },
   { role: 'Admin', description: 'All sub companies', email: 'admin@example.com', password: 'password123', icon: Users },
   { role: 'HR', description: 'One sub company', email: 'hr@example.com', password: 'password123', icon: Clock },
 ];
@@ -47,7 +48,7 @@ export function LoginPage() {
     setValue,
     watch,
     formState: { errors, isSubmitting },
-  } = useForm<LoginFormData>({ resolver: zodResolver(loginSchema) });
+  } = useForm<LoginFormData>({ resolver: zodResolver(loginSchema), mode: 'onTouched' });
 
   const currentEmail = watch('email');
 
@@ -59,7 +60,7 @@ export function LoginPage() {
       const stored = localStorage.getItem('auth_user');
       if (stored) {
         const user = JSON.parse(stored) as { role: string };
-        if (user.role === 'SUPER_ADMIN') navigate('/super-admin/dashboard');
+        if (user.role === 'SUPER_ADMIN' || user.role === 'SUPER_ADMIN_VIEWER') navigate('/super-admin/dashboard');
         else if (user.role === 'ADMIN') navigate('/admin/dashboard');
         else navigate('/hr/dashboard');
       }

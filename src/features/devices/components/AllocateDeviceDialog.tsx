@@ -10,12 +10,14 @@ import { useToast } from '@/components/feedback/ToastContext';
 import { useAllocateDevice } from '../hooks/useDevices';
 import { useCompanies, useSubCompaniesByCompany } from '@/features/companies/hooks/useCompanies';
 import type { Device } from '@/types/device';
+import { optionalText } from '@/lib/validation';
 
 const schema = z.object({
-  companyId: z.string().min(1, 'Company required'),
-  subCompanyId: z.string().min(1, 'Sub company required'),
-  notes: z.string().optional(),
+  companyId: z.string().min(1, 'Select a company'),
+  subCompanyId: z.string().min(1, 'Select a sub company'),
+  notes: optionalText('Notes', 200),
 });
+
 type FormData = z.infer<typeof schema>;
 
 interface Props {
@@ -38,7 +40,7 @@ export function AllocateDeviceDialog({ open, device, onClose, mode = 'allocate' 
   const companyOptions = [{ label: 'Select Company', value: '' }, ...(companiesData?.data ?? []).map((c) => ({ label: c.name, value: c.id }))];
   const subOptions = [{ label: 'Select Sub Company', value: '' }, ...(subCompanies ?? []).map((sc) => ({ label: sc.name, value: sc.id }))];
 
-  const { register, handleSubmit, setValue, formState: { errors, isSubmitting } } = useForm<FormData>({ resolver: zodResolver(schema) });
+  const { register, handleSubmit, setValue, formState: { errors, isSubmitting } } = useForm<FormData>({ resolver: zodResolver(schema), mode: 'onTouched' });
 
   async function onSubmit(data: FormData) {
     try {
@@ -57,7 +59,7 @@ export function AllocateDeviceDialog({ open, device, onClose, mode = 'allocate' 
       size="md"
       footer={<><Button variant="outline" onClick={onClose}>Cancel</Button><Button form="allocate-form" type="submit" loading={isSubmitting || allocate.isPending}>{isRealloc ? 'Re-allocate' : 'Allocate'}</Button></>}
     >
-      <form id="allocate-form" onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+      <form noValidate id="allocate-form" onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <div className="p-3 bg-surface-50 rounded-lg">
           <p className="text-xs text-surface-500">Device</p>
           <p className="font-semibold text-surface-900">{device.deviceId}</p>
@@ -70,7 +72,7 @@ export function AllocateDeviceDialog({ open, device, onClose, mode = 'allocate' 
         <Select label="Sub Company" required options={subOptions} error={errors.subCompanyId?.message}
           {...register('subCompanyId')} disabled={!selectedCompany}
         />
-        <Input label="Notes (Optional)" {...register('notes')} placeholder="Deployment notes..." />
+        <Input label="Notes (Optional)" maxLength={220} error={errors.notes?.message} {...register('notes')} placeholder="Deployment notes..." />
       </form>
     </Dialog>
   );

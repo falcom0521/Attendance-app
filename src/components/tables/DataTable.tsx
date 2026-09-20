@@ -101,6 +101,7 @@ export function DataTable<T>({
               type="text"
               placeholder={searchPlaceholder}
               value={searchValue ?? ''}
+              maxLength={100}
               onChange={(e) => onSearchChange?.(e.target.value)}
               className="form-input pl-8 text-sm h-8"
               aria-label="Search"

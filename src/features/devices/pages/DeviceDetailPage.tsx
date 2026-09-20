@@ -12,6 +12,7 @@ import { DataTable, type Column } from '@/components/tables/DataTable';
 import { ErrorState } from '@/components/feedback/ErrorState';
 import { useAuthStore } from '@/store/authStore';
 import { hasPermission } from '@/utils/permissions';
+import { isSuperAdminRole } from '@/config/permissions';
 import { formatDate, formatDateTime, formatTime, addDaysToDate, todayISO } from '@/utils/date';
 import type { DeviceAllocation, DevicePunchLog } from '@/types/device';
 import { useDevice, useDeviceAllocations, useDevicePunchLogs, useDeviceStats } from '../hooks/useDevices';
@@ -39,7 +40,7 @@ export function DeviceDetailPage() {
   const navigate = useNavigate();
   const { user } = useAuthStore();
   const role = user?.role ?? 'ADMIN';
-  const isSuperAdmin = role === 'SUPER_ADMIN';
+  const isSuperAdmin = isSuperAdminRole(role);
   const basePath = isSuperAdmin ? '/super-admin' : '/admin';
   const canUpdate = hasPermission(role, 'devices:update');
   const canAllocate = hasPermission(role, 'devices:allocate');
@@ -55,12 +56,13 @@ export function DeviceDetailPage() {
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
 
+  const rangeError = from && to && from > to ? 'From date must be on or before the To date' : '';
   const { data: device, isLoading, error, refetch } = useDevice(deviceId);
   const { data: stats } = useDeviceStats(deviceId);
   const { data: allocations = [], isLoading: loadingAlloc } = useDeviceAllocations(deviceId);
   const { data: logs, isLoading: loadingLogs } = useDevicePunchLogs(deviceId, {
-    startDate: from || undefined,
-    endDate: to || undefined,
+    startDate: rangeError ? undefined : from || undefined,
+    endDate: rangeError ? undefined : to || undefined,
     search: search || undefined,
     page,
     pageSize: 15,
@@ -233,6 +235,7 @@ export function DeviceDetailPage() {
             <div className="w-40"><Input label="From" type="date" value={from} max={to || undefined} onChange={(e) => { setFrom(e.target.value); setPage(1); }} /></div>
             <div className="w-40"><Input label="To" type="date" value={to} min={from || undefined} onChange={(e) => { setTo(e.target.value); setPage(1); }} /></div>
           </div>
+          {rangeError && <p className="form-error" role="alert">{rangeError}</p>}
           <DataTable
             data={logs?.data ?? []}
             columns={punchColumns}

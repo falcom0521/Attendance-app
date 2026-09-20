@@ -13,6 +13,7 @@ import { DeallocateDeviceDialog } from '../components/DeallocateDeviceDialog';
 import { useAuthStore } from '@/store/authStore';
 import { useSubCompanyScope } from '@/hooks/useSubCompanyScope';
 import { hasPermission } from '@/utils/permissions';
+import { isSuperAdminRole } from '@/config/permissions';
 import type { Device } from '@/types/device';
 import { formatDateTime } from '@/utils/date';
 import { cn } from '@/lib/utils';
@@ -37,7 +38,7 @@ export function DevicesPage() {
   const { user } = useAuthStore();
   const scope = useSubCompanyScope();
   const role = user?.role ?? 'ADMIN';
-  const isSuperAdmin = role === 'SUPER_ADMIN';
+  const isSuperAdmin = isSuperAdminRole(role);
   const basePath = isSuperAdmin ? '/super-admin' : '/admin';
   const canCreate = hasPermission(role, 'devices:create');
   const canUpdate = hasPermission(role, 'devices:update');

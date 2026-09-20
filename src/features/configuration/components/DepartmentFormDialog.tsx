@@ -10,13 +10,11 @@ import { useToast } from '@/components/feedback/ToastContext';
 import { useCreateDepartment, useUpdateDepartment } from '../hooks/useDepartments';
 import { useAuthStore } from '@/store/authStore';
 import type { Department } from '@/types/department';
+import { requiredText, optionalText } from '@/lib/validation';
 
 const schema = z.object({
-  name: z
-    .string()
-    .min(2, 'Name must be at least 2 characters')
-    .max(60, 'Name must be 60 characters or fewer'),
-  description: z.string().max(200, 'Description must be 200 characters or fewer').optional(),
+  name: requiredText('Name', { min: 2, max: 60 }),
+  description: optionalText('Description', 200),
   status: z.enum(['ACTIVE', 'INACTIVE']),
 });
 
@@ -42,6 +40,7 @@ export function DepartmentFormDialog({ open, onClose, department }: Props) {
     formState: { errors, isSubmitting },
   } = useForm<FormData>({
     resolver: zodResolver(schema),
+    mode: 'onTouched',
     defaultValues: { status: 'ACTIVE', description: '' },
   });
 
@@ -95,7 +94,7 @@ export function DepartmentFormDialog({ open, onClose, department }: Props) {
         </>
       }
     >
-      <form id="dept-form" onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+      <form noValidate id="dept-form" onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <Input
           label="Department Name"
           required

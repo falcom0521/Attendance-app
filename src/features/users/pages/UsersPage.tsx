@@ -12,6 +12,7 @@ import { UserFormDialog } from '../components/UserFormDialog';
 import { UserDetailDialog } from '../components/UserDetailDialog';
 import { useToast } from '@/components/feedback/ToastContext';
 import { useAuthStore } from '@/store/authStore';
+import { hasPermission, isSuperAdminRole, ROLE_LABELS } from '@/config/permissions';
 import { useCompanies } from '@/features/companies/hooks/useCompanies';
 import type { AppUser } from '@/types/user';
 import { formatDate } from '@/utils/date';
@@ -20,6 +21,7 @@ const ROLE_OPTIONS = [
   { label: 'All Roles', value: '' },
   { label: 'Admin', value: 'ADMIN' },
   { label: 'HR', value: 'HR' },
+  { label: 'Super Admin (Read-only)', value: 'SUPER_ADMIN_VIEWER' },
 ];
 
 const STATUS_OPTIONS = [
@@ -28,14 +30,16 @@ const STATUS_OPTIONS = [
   { label: 'Inactive', value: 'INACTIVE' },
 ];
 
-const roleBadge: Record<string, 'brand' | 'info' | 'success'> = {
-  SUPER_ADMIN: 'brand', ADMIN: 'info', HR: 'success',
+const roleBadge: Record<string, 'brand' | 'info' | 'success' | 'warning'> = {
+  SUPER_ADMIN: 'brand', SUPER_ADMIN_VIEWER: 'warning', ADMIN: 'info', HR: 'success',
 };
 
 export function UsersPage() {
   const toast = useToast();
   const { user } = useAuthStore();
-  const isSuperAdmin = user?.role === 'SUPER_ADMIN';
+  // Both Super Admin roles see the whole platform; only the full one can change anything.
+  const isSuperAdmin = isSuperAdminRole(user?.role);
+  const canManage = !!user && hasPermission(user.role, 'hr:create');
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
   const [role, setRole] = useState('');
@@ -69,7 +73,7 @@ export function UsersPage() {
         </div>
       ),
     },
-    { key: 'role', header: 'Role', accessor: (r) => <Badge variant={roleBadge[r.role] ?? 'surface'} label={r.role} />, width: '100px' },
+    { key: 'role', header: 'Role', accessor: (r) => <Badge variant={roleBadge[r.role] ?? 'surface'}>{ROLE_LABELS[r.role] ?? r.role}</Badge>, width: '190px' },
     { key: 'companyName', header: 'Company', accessor: (r) => <span className="text-sm">{r.companyName ?? '—'}</span> },
     { key: 'subCompanyName', header: 'Sub Company', accessor: (r) => <span className="text-sm">{r.subCompanyName ?? (r.role === 'ADMIN' ? 'All sub companies' : '—')}</span> },
     { key: 'status', header: 'Status', accessor: (r) => <StatusBadge status={r.status} />, width: '100px' },
@@ -90,6 +94,8 @@ export function UsersPage() {
       ),
     },
   ];
+  // Read-only accounts get the table without the edit / deactivate column.
+  const visibleColumns = canManage ? columns : columns.filter((c) => c.key !== 'actions');
 
   async function handleToggle() {
     if (!toggleTarget) return;
@@ -104,9 +110,9 @@ export function UsersPage() {
     <div className="page-container">
       <PageHeader
         title="Users"
-        subtitle={isSuperAdmin ? "Manage Admin and HR users across the platform" : "Manage HR users for your company"}
+        subtitle={!canManage ? "View users across the platform (read-only)" : isSuperAdmin ? "Manage Admin, HR and read-only Super Admin users across the platform" : "Manage HR users for your company"}
         breadcrumbs={[{ label: isSuperAdmin ? 'Super Admin' : 'Admin' }, { label: 'Users' }]}
-        action={<Button leftIcon={<Plus className="h-4 w-4" />} onClick={() => { setEditUser(null); setFormOpen(true); }}>Add User</Button>}
+        action={canManage && <Button leftIcon={<Plus className="h-4 w-4" />} onClick={() => { setEditUser(null); setFormOpen(true); }}>Add User</Button>}
       />
       <div className="flex flex-wrap gap-3">
         <div className="w-36">
@@ -126,15 +132,15 @@ export function UsersPage() {
         </div>
       </div>
       <DataTable
-        data={data?.data ?? []} columns={columns} keyExtractor={(r) => r.id}
+        data={data?.data ?? []} columns={visibleColumns} keyExtractor={(r) => r.id}
         loading={isLoading} error={error ? 'Failed to load users' : null} onRetry={refetch}
         searchable searchValue={search} onSearchChange={(v) => { setSearch(v); setPage(1); }}
         searchPlaceholder="Search users..."
         onRowClick={setViewUser}
         pagination={data ? { page, totalPages: data.totalPages, total: data.total, pageSize: data.pageSize, onPageChange: setPage } : undefined}
-        emptyState={{ title: 'No users found', icon: <UserCog className="h-8 w-8" />, action: { label: 'Add User', onClick: () => setFormOpen(true), icon: <Plus className="h-4 w-4" /> } }}
+        emptyState={{ title: 'No users found', icon: <UserCog className="h-8 w-8" />, action: canManage ? { label: 'Add User', onClick: () => setFormOpen(true), icon: <Plus className="h-4 w-4" /> } : undefined }}
       />
-      <UserDetailDialog user={viewUser} onClose={() => setViewUser(null)} onEdit={(u) => { setViewUser(null); setEditUser(u); setFormOpen(true); }} />
+      <UserDetailDialog user={viewUser} onClose={() => setViewUser(null)} onEdit={canManage ? (u) => { setViewUser(null); setEditUser(u); setFormOpen(true); } : undefined} />
       <UserFormDialog open={formOpen} onClose={() => { setFormOpen(false); setEditUser(null); }} editUser={editUser} />
       <ConfirmDialog open={!!toggleTarget} onClose={() => setToggleTarget(null)} onConfirm={handleToggle}
         title={`${toggleTarget?.status === 'ACTIVE' ? 'Deactivate' : 'Activate'} User`}

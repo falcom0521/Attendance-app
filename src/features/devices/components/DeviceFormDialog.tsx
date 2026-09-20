@@ -8,16 +8,18 @@ import { Input } from '@/components/ui/Input';
 import { useToast } from '@/components/feedback/ToastContext';
 import { useCreateDevice, useUpdateDevice } from '../hooks/useDevices';
 import type { Device } from '@/types/device';
+import { requiredText, codeField, macField, ipv4Field } from '@/lib/validation';
 
 const schema = z.object({
-  deviceId: z.string().min(1, 'Device ID required'),
-  name: z.string().min(2, 'Name required'),
-  modelNumber: z.string().min(1, 'Model required'),
-  serialNumber: z.string().min(1, 'Serial number required'),
-  macAddress: z.string().regex(/^([0-9A-Fa-f]{2}:){5}[0-9A-Fa-f]{2}$/, 'Invalid MAC address'),
-  firmwareVersion: z.string().min(1, 'Firmware required'),
-  ipAddress: z.string().min(7, 'IP required'),
+  deviceId: codeField('Device ID', 3, 30),
+  name: requiredText('Device name', { min: 2, max: 60 }),
+  modelNumber: requiredText('Model number', { max: 50 }),
+  serialNumber: codeField('Serial number', 3, 50),
+  macAddress: macField,
+  firmwareVersion: requiredText('Firmware version', { max: 20 }).regex(/^\d+(\.\d+){1,3}([-+][\w.]+)?$/, 'Use a version like 3.4.2'),
+  ipAddress: ipv4Field,
 });
+
 type FormData = z.infer<typeof schema>;
 
 export function DeviceFormDialog({ open, onClose, device }: { open: boolean; onClose: () => void; device?: Device | null }) {
@@ -25,7 +27,7 @@ export function DeviceFormDialog({ open, onClose, device }: { open: boolean; onC
   const create = useCreateDevice();
   const update = useUpdateDevice();
   const isEdit = !!device;
-  const { register, handleSubmit, reset, formState: { errors, isSubmitting } } = useForm<FormData>({ resolver: zodResolver(schema) });
+  const { register, handleSubmit, reset, formState: { errors, isSubmitting } } = useForm<FormData>({ resolver: zodResolver(schema), mode: 'onTouched' });
 
   useEffect(() => {
     if (!open) return;
@@ -61,7 +63,7 @@ export function DeviceFormDialog({ open, onClose, device }: { open: boolean; onC
     <Dialog open={open} onClose={onClose} title={isEdit ? 'Edit Device' : 'Add New Device'} size="lg"
       footer={<><Button variant="outline" onClick={onClose}>Cancel</Button><Button form="device-form" type="submit" loading={isSubmitting}>{isEdit ? 'Save' : 'Add Device'}</Button></>}
     >
-      <form id="device-form" onSubmit={handleSubmit(onSubmit)} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <form noValidate id="device-form" onSubmit={handleSubmit(onSubmit)} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <Input label="Device ID" required error={errors.deviceId?.message} {...register('deviceId')} placeholder="DEV-XXX-001" />
         <Input label="Device Name" required error={errors.name?.message} {...register('name')} placeholder="Main Entrance" />
         <Input label="Model Number" required error={errors.modelNumber?.message} {...register('modelNumber')} />

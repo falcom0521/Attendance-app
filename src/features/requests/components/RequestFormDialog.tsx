@@ -19,6 +19,7 @@ import { cn } from '@/lib/utils';
 import type { RequestType, LeaveType } from '@/types/request';
 import { useCreateRequest, useLeaveBalances } from '../hooks/useRequests';
 import { LEAVE_TYPE_OPTIONS, REQUEST_TYPE_LABEL } from '../utils';
+import { reasonField } from '@/lib/validation';
 
 const punchPair = z.object({ punchIn: z.string(), punchOut: z.string() });
 
@@ -32,7 +33,7 @@ const schema = z
     missing: z.enum(['IN', 'OUT']),
     missingTime: z.string().optional(),
     punches: z.array(punchPair),
-    reason: z.string().min(5, 'Please provide a reason (min 5 characters)'),
+    reason: reasonField(5, 300),
   })
   .superRefine((v, ctx) => {
     const issue = (path: (string | number)[], message: string) => ctx.addIssue({ code: 'custom', path, message });
@@ -93,6 +94,7 @@ export function RequestFormDialog({ open, onClose, initial, lockType = false }: 
 
   const { register, handleSubmit, control, watch, setValue, reset, formState: { errors } } = useForm<FormData>({
     resolver: zodResolver(schema),
+    mode: 'onTouched',
     defaultValues: emptyForm(initial),
   });
   const { fields, append, remove } = useFieldArray({ control, name: 'punches' });
@@ -199,7 +201,7 @@ export function RequestFormDialog({ open, onClose, initial, lockType = false }: 
         </>
       }
     >
-      <form id="request-form" onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+      <form noValidate id="request-form" onSubmit={handleSubmit(onSubmit)} className="space-y-5">
         {!lockType && (
           <Select
             label="Request Type"

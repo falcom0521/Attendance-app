@@ -1,64 +1,45 @@
 import type { LoginCredentials, AuthUser } from '@/types/auth';
 import { sleep } from '@/lib/utils';
 import { logActivity } from '@/services/mock/activityLog.service';
-import { getUsersSnapshot } from '@/services/mock/user.service';
+import { getUsersSnapshot, getUserPassword } from '@/services/mock/user.service';
+import type { AppUser } from '@/types/user';
 
-const DEFAULT_PASSWORD = 'password123';
 // In-memory password overrides so a changed password works until the page reloads (mock only).
 const passwordOverrides = new Map<string, string>();
 
-const MOCK_USERS: AuthUser[] = [
-  {
-    id: 'user-001',
-    email: 'superadmin@example.com',
-    firstName: 'Arjun',
-    lastName: 'Krishnaswamy',
-    role: 'SUPER_ADMIN',
-    isActive: true,
-  },
-  {
-    id: 'user-002',
-    email: 'admin@example.com',
-    firstName: 'Meera',
-    lastName: 'Nambiar',
-    role: 'ADMIN',
-    companyId: 'company-001',
-    companyName: 'Nexus Technologies Pvt Ltd',
-    isActive: true,
-  },
-  {
-    id: 'user-004',
-    email: 'hr@example.com',
-    firstName: 'Divya',
-    lastName: 'Menon',
-    role: 'HR',
-    companyId: 'company-001',
-    companyName: 'Nexus Technologies Pvt Ltd',
-    subCompanyId: 'sub-001',
-    subCompanyName: 'Nexus Kochi HQ',
-    isActive: true,
-  },
-];
+/** Builds the session user from a user record. Users created in the app can sign in too. */
+function toAuthUser(u: AppUser): AuthUser {
+  return {
+    id: u.id,
+    email: u.email,
+    firstName: u.firstName,
+    lastName: u.lastName,
+    role: u.role,
+    companyId: u.companyId,
+    companyName: u.companyName,
+    subCompanyId: u.subCompanyId,
+    subCompanyName: u.subCompanyName,
+    isActive: u.status === 'ACTIVE',
+  };
+}
 
 export const authService = {
   async login(credentials: LoginCredentials): Promise<{ user: AuthUser; token: string }> {
     await sleep(800);
-    const user = MOCK_USERS.find((u) => u.email === credentials.email);
-    if (!user || credentials.password !== (passwordOverrides.get(user.id) ?? DEFAULT_PASSWORD)) {
+    const record = getUsersSnapshot().find((u) => u.email.toLowerCase() === credentials.email.trim().toLowerCase());
+    if (!record || credentials.password !== (passwordOverrides.get(record.id) ?? getUserPassword(record.id))) {
       throw new Error('Invalid email or password');
     }
-    if (!user.isActive) {
+    if (record.status !== 'ACTIVE') {
       throw new Error('Account is inactive. Contact your administrator.');
     }
-    const token = `mock-token-${user.id}-${Date.now()}`;
-    // Pick up profile edits made earlier in this session (mock only; the backend owns this in Phase 2).
-    const saved = getUsersSnapshot().find((u) => u.id === user.id);
-    return { user: saved ? { ...user, firstName: saved.firstName, lastName: saved.lastName } : user, token };
+    const token = `mock-token-${record.id}-${Date.now()}`;
+    return { user: toAuthUser(record), token };
   },
 
   async changePassword(userId: string, currentPassword: string, newPassword: string): Promise<void> {
     await sleep(600);
-    if (currentPassword !== (passwordOverrides.get(userId) ?? DEFAULT_PASSWORD)) {
+    if (currentPassword !== (passwordOverrides.get(userId) ?? getUserPassword(userId))) {
       throw new Error('Current password is incorrect');
     }
     if (newPassword === currentPassword) throw new Error('New password must be different from the current one');
@@ -72,9 +53,9 @@ export const authService = {
 
   async getCurrentUser(token: string): Promise<AuthUser> {
     await sleep(300);
-    const userId = token.split('-')[2];
-    const user = MOCK_USERS.find((u) => u.id === userId);
-    if (!user) throw new Error('User not found');
-    return user;
+    const userId = token.split('-').slice(2, 4).join('-');
+    const record = getUsersSnapshot().find((u) => u.id === userId);
+    if (!record) throw new Error('User not found');
+    return toAuthUser(record);
   },
 };

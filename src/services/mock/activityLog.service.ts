@@ -19,6 +19,14 @@ export interface ActivityActor {
 
 let currentActor: ActivityActor | null = null;
 
+export function getActivityActorId(): string | undefined {
+  return currentActor?.id;
+}
+
+export function getActivityActorRole(): string | undefined {
+  return currentActor?.role;
+}
+
 export function getActivityActorName(): string {
   return currentActor?.name ?? 'System';
 }

@@ -5,6 +5,7 @@ import { cn } from '@/lib/utils';
 import { Avatar } from '@/components/ui/Avatar';
 import { useUIStore } from '@/store/uiStore';
 import { useAuth } from '@/features/auth/hooks/useAuth';
+import { isSuperAdminRole, ROLE_LABELS } from '@/config/permissions';
 
 interface TopbarProps {
   contextLabel?: React.ReactNode;
@@ -32,13 +33,7 @@ export function Topbar({ contextLabel }: TopbarProps) {
     navigate('/login');
   }
 
-  const profilePath = user?.role === 'SUPER_ADMIN' ? '/super-admin/profile' : user?.role === 'ADMIN' ? '/admin/profile' : '/hr/profile';
-
-  const roleLabelMap: Record<string, string> = {
-    SUPER_ADMIN: 'Super Admin',
-    ADMIN: 'Admin',
-    HR: 'HR',
-  };
+  const profilePath = isSuperAdminRole(user?.role) ? '/super-admin/profile' : user?.role === 'ADMIN' ? '/admin/profile' : '/hr/profile';
 
   return (
     <header className="h-[60px] bg-white border-b border-surface-200 flex items-center justify-between px-4 gap-4 flex-shrink-0">
@@ -75,7 +70,7 @@ export function Topbar({ contextLabel }: TopbarProps) {
                 {user?.firstName} {user?.lastName}
               </p>
               <p className="text-2xs text-surface-400 leading-tight">
-                {user ? roleLabelMap[user.role] : ''}
+                {user ? ROLE_LABELS[user.role] : ''}
               </p>
             </div>
             <ChevronDown className={cn('h-3.5 w-3.5 text-surface-400 transition-transform', profileOpen && 'rotate-180')} />

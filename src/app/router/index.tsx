@@ -1,6 +1,7 @@
 import { createBrowserRouter, Navigate } from 'react-router-dom';
 import { ProtectedRoute } from './ProtectedRoute';
 import { RoleRoute } from './RoleRoute';
+import { SUPER_ADMIN_ROLES } from '@/config/permissions';
 import { NotFoundPage, UnauthorizedPage } from '@/components/common/ErrorPages';
 
 // Layouts
@@ -55,7 +56,7 @@ export const router = createBrowserRouter([
 
       // SUPER ADMIN
       {
-        element: <RoleRoute allowedRoles={['SUPER_ADMIN']} />,
+        element: <RoleRoute allowedRoles={SUPER_ADMIN_ROLES} />,
         children: [
           {
             path: '/super-admin',

@@ -58,6 +58,7 @@ The app will be available at `http://localhost:5173`
 | Role | Email | Password |
 |------|-------|----------|
 | Super Admin | superadmin@example.com | password123 |
+| Super Admin (Read-only) | viewer@example.com | password123 |
 | Admin | admin@example.com | password123 |
 | HR | hr@example.com | password123 |
 
@@ -177,7 +178,7 @@ async getEmployees(params) {
 
 ## Role System
 
-Three roles with strictly enforced permissions:
+Four roles with strictly enforced permissions:
 
 ### SUPER_ADMIN
 - Platform-wide access
@@ -185,6 +186,12 @@ Three roles with strictly enforced permissions:
 - Create Admin and HR users
 - View audit logs
 - Device lifecycle: add, edit, allocate, **re-allocate, deallocate**, allocation history and per-device punch log
+
+### SUPER_ADMIN_VIEWER ("Super Admin (Read-only)")
+- Sees everything a Super Admin sees (dashboard, companies, sub companies, devices, users, activity logs) but **cannot change anything** — no create, edit, deactivate, allocate or delete
+- Created only by a Super Admin from **Users → Add User → Role: Super Admin (Read-only)**; platform-level, so it has no company or sub company
+- Can edit their own name / phone and change their own password
+- Demo account: `viewer@example.com` / `password123`
 
 ### ADMIN
 - Scoped to one company. Companies own no employees — **sub-companies do** — so Admin works across *all* of the company's sub-companies and can narrow to one with the topbar sub-company selector

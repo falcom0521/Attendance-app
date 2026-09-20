@@ -24,6 +24,8 @@ import { UserFormDialog } from '@/features/users/components/UserFormDialog';
 import { useActivityLogs } from '@/features/activity-logs/hooks/useActivityLogs';
 import { ActivityLogTable } from '@/features/activity-logs/components/ActivityLogTable';
 import { formatDate, formatDateTime } from '@/utils/date';
+import { useAuthStore } from '@/store/authStore';
+import { hasPermission } from '@/config/permissions';
 import type { SubCompany } from '@/types/company';
 import type { Device } from '@/types/device';
 import type { AppUser } from '@/types/user';
@@ -32,6 +34,10 @@ export function CompanyDetailPage() {
   const { companyId = '' } = useParams<{ companyId: string }>();
   const navigate = useNavigate();
   const toast = useToast();
+  const { user } = useAuthStore();
+  const canUpdate = !!user && hasPermission(user.role, 'companies:update');
+  const canAddSub = !!user && hasPermission(user.role, 'subCompanies:create');
+  const canEditUsers = !!user && hasPermission(user.role, 'hr:update');
 
   const [tab, setTab] = useState('overview');
   const [editOpen, setEditOpen] = useState(false);
@@ -143,12 +149,14 @@ export function CompanyDetailPage() {
               <p className="text-sm text-surface-500 mt-0.5">{company.code} · {[company.city, company.state, company.country].filter(Boolean).join(', ')}</p>
               <p className="text-xs text-surface-400 mt-1">Registered {formatDate(company.createdAt)}</p>
             </div>
-            <div className="flex flex-wrap gap-2">
-              <Button variant="outline" size="sm" leftIcon={<Pencil className="h-4 w-4" />} onClick={() => setEditOpen(true)}>Edit</Button>
-              <Button variant={active ? 'danger' : 'primary'} size="sm" leftIcon={active ? <ToggleRight className="h-4 w-4" /> : <ToggleLeft className="h-4 w-4" />} onClick={() => setToggleOpen(true)}>
-                {active ? 'Deactivate' : 'Activate'}
-              </Button>
-            </div>
+            {canUpdate && (
+              <div className="flex flex-wrap gap-2">
+                <Button variant="outline" size="sm" leftIcon={<Pencil className="h-4 w-4" />} onClick={() => setEditOpen(true)}>Edit</Button>
+                <Button variant={active ? 'danger' : 'primary'} size="sm" leftIcon={active ? <ToggleRight className="h-4 w-4" /> : <ToggleLeft className="h-4 w-4" />} onClick={() => setToggleOpen(true)}>
+                  {active ? 'Deactivate' : 'Activate'}
+                </Button>
+              </div>
+            )}
           </div>
         </CardBody>
       </Card>
@@ -204,13 +212,15 @@ export function CompanyDetailPage() {
 
       {tab === 'sub-companies' && (
         <>
-          <div className="flex justify-end">
-            <Button size="sm" leftIcon={<Plus className="h-4 w-4" />} onClick={() => setAddSubOpen(true)}>Add Sub Company</Button>
-          </div>
+          {canAddSub && (
+            <div className="flex justify-end">
+              <Button size="sm" leftIcon={<Plus className="h-4 w-4" />} onClick={() => setAddSubOpen(true)}>Add Sub Company</Button>
+            </div>
+          )}
           <DataTable
             data={subCompanies} columns={subColumns} keyExtractor={(r) => r.id} loading={loadingSubs}
             onRowClick={(r) => navigate(`/super-admin/sub-companies/${r.id}`)}
-            emptyState={{ title: 'No sub companies yet', description: 'Employees and devices belong to sub companies — add the first one.', icon: <GitBranch className="h-8 w-8" />, action: { label: 'Add Sub Company', onClick: () => setAddSubOpen(true), icon: <Plus className="h-4 w-4" /> } }}
+            emptyState={{ title: 'No sub companies yet', description: canAddSub ? 'Employees and devices belong to sub companies — add the first one.' : 'Employees and devices belong to sub companies.', icon: <GitBranch className="h-8 w-8" />, action: canAddSub ? { label: 'Add Sub Company', onClick: () => setAddSubOpen(true), icon: <Plus className="h-4 w-4" /> } : undefined }}
           />
         </>
       )}
@@ -240,7 +250,7 @@ export function CompanyDetailPage() {
 
       <CompanyFormDialog open={editOpen} onClose={() => setEditOpen(false)} company={company} />
       <SubCompanyFormDialog open={addSubOpen} onClose={() => setAddSubOpen(false)} defaultCompanyId={company.id} />
-      <UserDetailDialog user={viewUser} onClose={() => setViewUser(null)} onEdit={(u) => { setViewUser(null); setEditUser(u); }} />
+      <UserDetailDialog user={viewUser} onClose={() => setViewUser(null)} onEdit={canEditUsers ? (u) => { setViewUser(null); setEditUser(u); } : undefined} />
       <UserFormDialog open={!!editUser} onClose={() => setEditUser(null)} editUser={editUser} />
       <ConfirmDialog
         open={toggleOpen} onClose={() => setToggleOpen(false)} onConfirm={handleToggle}

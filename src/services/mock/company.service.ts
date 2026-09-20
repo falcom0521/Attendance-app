@@ -3,6 +3,7 @@ import type { PaginatedResponse, PaginationParams, FilterParams } from '@/types/
 import { mockCompanies } from '@/mocks/data/companies';
 import { mockSubCompanies } from '@/mocks/data/subCompanies';
 import { sleep } from '@/lib/utils';
+import { assertWritable } from './writeGuard';
 import { getEmployeesSnapshot } from './employee.service';
 import { getDevicesSnapshot } from './device.service';
 import { getUsersSnapshot } from './user.service';
@@ -70,6 +71,7 @@ export const companyService = {
   },
 
   async createCompany(payload: CreateCompanyPayload): Promise<Company> {
+    assertWritable();
     await sleep(600);
     const newCompany: Company = {
       ...payload,
@@ -86,6 +88,7 @@ export const companyService = {
   },
 
   async updateCompany(id: string, payload: Partial<CreateCompanyPayload>): Promise<Company> {
+    assertWritable();
     await sleep(500);
     const idx = companies.findIndex((c) => c.id === id);
     if (idx === -1) throw new Error('Company not found');
@@ -95,6 +98,7 @@ export const companyService = {
   },
 
   async toggleCompanyStatus(id: string): Promise<Company> {
+    assertWritable();
     await sleep(300);
     const idx = companies.findIndex((c) => c.id === id);
     if (idx === -1) throw new Error('Company not found');
@@ -142,6 +146,7 @@ export const companyService = {
   },
 
   async createSubCompany(payload: CreateSubCompanyPayload): Promise<SubCompany> {
+    assertWritable();
     await sleep(600);
     const company = companies.find((c) => c.id === payload.companyId);
     const newSub: SubCompany = {
@@ -161,6 +166,7 @@ export const companyService = {
   },
 
   async updateSubCompany(id: string, payload: Partial<CreateSubCompanyPayload>): Promise<SubCompany> {
+    assertWritable();
     await sleep(500);
     const idx = subCompanies.findIndex((sc) => sc.id === id);
     if (idx === -1) throw new Error('Sub company not found');
@@ -170,6 +176,7 @@ export const companyService = {
   },
 
   async toggleSubCompanyStatus(id: string): Promise<SubCompany> {
+    assertWritable();
     await sleep(300);
     const idx = subCompanies.findIndex((sc) => sc.id === id);
     if (idx === -1) throw new Error('Sub company not found');

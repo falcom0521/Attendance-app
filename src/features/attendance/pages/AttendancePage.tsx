@@ -124,7 +124,7 @@ export function AttendancePage() {
       <div className="flex flex-wrap gap-3 items-end">
         <div>
           <label className="form-label">Date</label>
-          <Input type="date" value={date} onChange={(e) => { setDate(e.target.value); setPage(1); }} className="w-44" />
+          <Input type="date" value={date} max={todayISO()} onChange={(e) => { if (!e.target.value) return; setDate(e.target.value); setPage(1); }} className="w-44" aria-label="Attendance date" />
         </div>
         <div className="w-44">
           <Select options={STATUS_OPTIONS} value={status} onChange={(e) => { setStatus(e.target.value); setPage(1); }} />
@@ -133,7 +133,7 @@ export function AttendancePage() {
           <Select options={deptOptions} value={department} onChange={(e) => { setDepartment(e.target.value); setPage(1); }} />
         </div>
         <div className="flex-1 min-w-[200px]">
-          <Input placeholder="Search employees..." value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); }} />
+          <Input placeholder="Search employees..." maxLength={100} value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); }} />
         </div>
       </div>
 

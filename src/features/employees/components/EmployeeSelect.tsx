@@ -45,6 +45,7 @@ export function EmployeeSelect({
           type="text"
           placeholder="Search by name, code or department…"
           value={search}
+          maxLength={100}
           onChange={(e) => setSearch(e.target.value)}
           className={cn('form-input pr-8 text-sm', error && 'form-input-error')}
         />

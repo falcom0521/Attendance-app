@@ -3,13 +3,38 @@ import type { PaginatedResponse, PaginationParams, FilterParams } from '@/types/
 import { mockUsers } from '@/mocks/data/users';
 import { mockSubCompanies } from '@/mocks/data/subCompanies';
 import { sleep } from '@/lib/utils';
-import { logActivity } from './activityLog.service';
+import { assertWritable } from './writeGuard';
+import { getActivityActorId, getActivityActorRole, logActivity } from './activityLog.service';
 
 // eslint-disable-next-line prefer-const
 let users: AppUser[] = [...mockUsers];
 
+const DEFAULT_PASSWORD = 'password123';
+// Passwords of users created in the app (mock only). Seeded users fall back to the default.
+const passwords = new Map<string, string>();
+
 export function getUsersSnapshot(): AppUser[] {
   return users;
+}
+
+export function getUserPassword(id: string): string {
+  return passwords.get(id) ?? DEFAULT_PASSWORD;
+}
+
+const VIEWER = 'SUPER_ADMIN_VIEWER';
+
+/** Only a Super Admin may create or promote a user to the read-only Super Admin role. */
+function assertCanAssignRole(role?: string): void {
+  if (role === VIEWER && getActivityActorRole() !== 'SUPER_ADMIN') {
+    throw new Error('Only a Super Admin can create a read-only Super Admin');
+  }
+}
+
+function assertUnique(payload: { email?: string; username?: string }, exceptId?: string): void {
+  const clash = (key: 'email' | 'username', value?: string) =>
+    !!value && users.some((u) => u.id !== exceptId && u[key].toLowerCase() === value.toLowerCase());
+  if (clash('email', payload.email)) throw new Error('A user with this email already exists');
+  if (clash('username', payload.username)) throw new Error('A user with this username already exists');
 }
 
 export const userService = {
@@ -46,12 +71,21 @@ export const userService = {
   },
 
   async createUser(payload: CreateUserPayload): Promise<AppUser> {
+    assertWritable();
     await sleep(600);
-    const subCompany = payload.subCompanyId
+    assertCanAssignRole(payload.role);
+    assertUnique(payload);
+
+    // A read-only Super Admin is platform-level: never tied to a company or sub company.
+    const isViewer = payload.role === VIEWER;
+    const { password, ...rest } = payload;
+    const subCompany = !isViewer && payload.subCompanyId
       ? mockSubCompanies.find((sc) => sc.id === payload.subCompanyId)
       : undefined;
     const newUser: AppUser = {
-      ...payload,
+      ...rest,
+      companyId: isViewer ? undefined : payload.companyId,
+      subCompanyId: isViewer ? undefined : payload.subCompanyId,
       id: `user-${String(users.length + 1).padStart(3, '0')}`,
       fullName: `${payload.firstName} ${payload.lastName}`,
       subCompanyName: subCompany?.name,
@@ -60,17 +94,32 @@ export const userService = {
       updatedAt: new Date().toISOString(),
     };
     users.push(newUser);
-    logActivity({ action: 'CREATED', module: 'Users', target: newUser.fullName, targetId: newUser.id, details: `${newUser.role} user created`, companyId: newUser.companyId });
+    passwords.set(newUser.id, password || DEFAULT_PASSWORD);
+    logActivity({ action: 'CREATED', module: 'Users', target: newUser.fullName, targetId: newUser.id, details: isViewer ? 'Read-only Super Admin created' : `${newUser.role} user created`, companyId: newUser.companyId });
     return newUser;
   },
 
   async updateUser(id: string, payload: Partial<CreateUserPayload>): Promise<AppUser> {
+    // A read-only user may still edit their own name and phone (My Profile), and nothing else.
+    const editingSelfAsViewer = getActivityActorRole() === VIEWER && getActivityActorId() === id;
+    if (editingSelfAsViewer) {
+      const { firstName, lastName, phone } = payload;
+      payload = { firstName, lastName, phone };
+    } else {
+      assertWritable();
+    }
     await sleep(500);
     const idx = users.findIndex((u) => u.id === id);
     if (idx === -1) throw new Error('User not found');
+    if (payload.role && payload.role !== users[idx].role) assertCanAssignRole(payload.role);
+    assertUnique(payload, id);
+
+    // A password is never part of the stored user record.
+    const changes: Partial<CreateUserPayload> = { ...payload };
+    delete changes.password;
     users[idx] = {
       ...users[idx],
-      ...payload,
+      ...changes,
       fullName: payload.firstName && payload.lastName
         ? `${payload.firstName} ${payload.lastName}`
         : users[idx].fullName,
@@ -81,6 +130,7 @@ export const userService = {
   },
 
   async toggleUserStatus(id: string): Promise<AppUser> {
+    assertWritable();
     await sleep(300);
     const idx = users.findIndex((u) => u.id === id);
     if (idx === -1) throw new Error('User not found');

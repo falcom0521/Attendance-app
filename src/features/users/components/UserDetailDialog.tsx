@@ -6,10 +6,10 @@ import { DetailRow } from '@/components/common/DetailRow';
 import { useActivityLogs } from '@/features/activity-logs/hooks/useActivityLogs';
 import { ACTION_VARIANT } from '@/features/activity-logs/constants';
 import { formatDate, formatDateTime } from '@/utils/date';
+import { ROLE_LABELS } from '@/config/permissions';
 import type { AppUser } from '@/types/user';
 
-const ROLE_LABEL: Record<string, string> = { SUPER_ADMIN: 'Super Admin', ADMIN: 'Admin', HR: 'HR' };
-const ROLE_VARIANT: Record<string, 'brand' | 'info' | 'success'> = { SUPER_ADMIN: 'brand', ADMIN: 'info', HR: 'success' };
+const ROLE_VARIANT: Record<string, 'brand' | 'info' | 'success' | 'warning'> = { SUPER_ADMIN: 'brand', SUPER_ADMIN_VIEWER: 'warning', ADMIN: 'info', HR: 'success' };
 
 interface Props {
   user: AppUser | null;
@@ -39,7 +39,7 @@ export function UserDetailDialog({ user, onClose, onEdit }: Props) {
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
             <h3 className="text-lg font-semibold text-surface-900">{user.fullName}</h3>
-            <Badge variant={ROLE_VARIANT[user.role] ?? 'surface'} size="sm">{ROLE_LABEL[user.role] ?? user.role}</Badge>
+            <Badge variant={ROLE_VARIANT[user.role] ?? 'surface'} size="sm">{ROLE_LABELS[user.role] ?? user.role}</Badge>
             <StatusBadge status={user.status} />
           </div>
           <p className="text-sm text-surface-500">{user.email}</p>

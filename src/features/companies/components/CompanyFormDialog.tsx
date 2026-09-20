@@ -9,17 +9,21 @@ import { Select } from '@/components/ui/Select';
 import { useToast } from '@/components/feedback/ToastContext';
 import { useCreateCompany, useUpdateCompany } from '../hooks/useCompanies';
 import type { Company } from '@/types/company';
+import { requiredText, codeField, emailField, phoneField, placeName } from '@/lib/validation';
 
 const schema = z.object({
-  name: z.string().min(2, 'Name is required'),
-  code: z.string().min(2, 'Code is required').max(10, 'Max 10 chars'),
-  registrationNumber: z.string().min(1, 'Registration number required'),
-  email: z.string().email('Invalid email'),
-  phone: z.string().min(7, 'Phone required'),
-  address: z.string().min(5, 'Address required'),
-  city: z.string().min(2, 'City required'),
-  state: z.string().min(2, 'State required'),
-  country: z.string().min(2, 'Country required'),
+  name: requiredText('Company name', { min: 2, max: 100 }),
+  code: codeField('Company code', 2, 10).toUpperCase(),
+  registrationNumber: requiredText('Registration number', { min: 3, max: 40 }).regex(
+    /^[A-Za-z0-9][A-Za-z0-9\-/. ]*$/,
+    'Registration number can only contain letters, numbers, spaces and - / .'
+  ),
+  email: emailField,
+  phone: phoneField,
+  address: requiredText('Address', { min: 5, max: 200 }),
+  city: placeName('City'),
+  state: placeName('State'),
+  country: placeName('Country'),
   status: z.enum(['ACTIVE', 'INACTIVE']),
 });
 
@@ -39,6 +43,7 @@ export function CompanyFormDialog({ open, onClose, company }: Props) {
 
   const { register, handleSubmit, reset, formState: { errors, isSubmitting } } = useForm<FormData>({
     resolver: zodResolver(schema),
+    mode: 'onTouched',
     defaultValues: { status: 'ACTIVE', country: 'India' },
   });
 
@@ -78,7 +83,7 @@ export function CompanyFormDialog({ open, onClose, company }: Props) {
         </>
       }
     >
-      <form id="company-form" onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+      <form noValidate id="company-form" onSubmit={handleSubmit(onSubmit)} className="space-y-5">
         <div>
           <h4 className="text-sm font-semibold text-surface-700 mb-3">Company Information</h4>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

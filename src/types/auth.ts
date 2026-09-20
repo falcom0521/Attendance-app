@@ -1,4 +1,8 @@
-export type UserRole = 'SUPER_ADMIN' | 'ADMIN' | 'HR';
+/**
+ * SUPER_ADMIN_VIEWER is a read-only Super Admin: it can see everything a Super Admin can,
+ * but cannot create, edit, deactivate, allocate or delete anything. Only a SUPER_ADMIN creates one.
+ */
+export type UserRole = 'SUPER_ADMIN' | 'SUPER_ADMIN_VIEWER' | 'ADMIN' | 'HR';
 
 export interface AuthUser {
   id: string;

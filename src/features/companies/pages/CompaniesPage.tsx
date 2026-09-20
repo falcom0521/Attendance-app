@@ -10,6 +10,8 @@ import { ConfirmDialog } from '@/components/ui/Dialog';
 import { useCompanies, useToggleCompanyStatus } from '../hooks/useCompanies';
 import { CompanyFormDialog } from '../components/CompanyFormDialog';
 import { useToast } from '@/components/feedback/ToastContext';
+import { useAuthStore } from '@/store/authStore';
+import { hasPermission } from '@/config/permissions';
 import type { Company } from '@/types/company';
 import { formatDate } from '@/utils/date';
 
@@ -22,6 +24,9 @@ const STATUS_OPTIONS = [
 export function CompaniesPage() {
   const toast = useToast();
   const navigate = useNavigate();
+  const { user } = useAuthStore();
+  const canCreate = !!user && hasPermission(user.role, 'companies:create');
+  const canUpdate = !!user && hasPermission(user.role, 'companies:update');
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState('');
@@ -70,6 +75,7 @@ export function CompaniesPage() {
           <button onClick={(e) => { e.stopPropagation(); navigate(`/super-admin/companies/${row.id}`); }} className="p-1.5 rounded-lg text-surface-400 hover:text-brand-600 hover:bg-brand-50 transition-colors" title="View details">
             <Eye className="h-4 w-4" />
           </button>
+          {canUpdate && (<>
           <button
             onClick={(e) => { e.stopPropagation(); setEditCompany(row); setFormOpen(true); }}
             className="p-1.5 rounded-lg text-surface-400 hover:text-brand-600 hover:bg-brand-50 transition-colors"
@@ -84,6 +90,7 @@ export function CompaniesPage() {
           >
             {row.status === 'ACTIVE' ? <ToggleRight className="h-4 w-4" /> : <ToggleLeft className="h-4 w-4" />}
           </button>
+          </>)}
         </div>
       ),
     },
@@ -111,7 +118,7 @@ export function CompaniesPage() {
         subtitle="Manage all registered companies on the platform"
         breadcrumbs={[{ label: 'Super Admin' }, { label: 'Companies' }]}
         action={
-          <Button
+          canCreate && <Button
             leftIcon={<Plus className="h-4 w-4" />}
             onClick={() => { setEditCompany(null); setFormOpen(true); }}
           >
@@ -153,7 +160,7 @@ export function CompaniesPage() {
         emptyState={{
           title: 'No companies found',
           description: 'Get started by adding your first company.',
-          action: { label: 'Add Company', onClick: () => setFormOpen(true), icon: <Plus className="h-4 w-4" /> },
+          action: canCreate ? { label: 'Add Company', onClick: () => setFormOpen(true), icon: <Plus className="h-4 w-4" /> } : undefined,
           icon: <Building2 className="h-8 w-8" />,
         }}
       />

@@ -44,6 +44,7 @@ export const HR_NAV: NavItem[] = [
 export function getNavForRole(role: UserRole): NavItem[] {
   switch (role) {
     case 'SUPER_ADMIN':
+    case 'SUPER_ADMIN_VIEWER':
       return SUPER_ADMIN_NAV;
     case 'ADMIN':
       return ADMIN_NAV;

@@ -122,6 +122,7 @@ export function RequestReviewDialog({ request, onClose }: { request: AttendanceR
             id="review-comment"
             rows={3}
             value={comment}
+            maxLength={500}
             onChange={(e) => { setComment(e.target.value); setCommentError(''); }}
             placeholder="Add a note for the requester…"
             className={`form-input resize-none text-sm ${commentError ? 'form-input-error' : ''}`}

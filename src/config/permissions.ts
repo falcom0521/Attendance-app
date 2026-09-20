@@ -69,6 +69,21 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     'activityLogs:view',
     'dashboard:super',
   ],
+  // Read-only mirror of SUPER_ADMIN: every *:view permission, no create / update / delete / allocate.
+  SUPER_ADMIN_VIEWER: [
+    'companies:view',
+    'subCompanies:view',
+    'devices:view',
+    'admins:view',
+    'hr:view',
+    'employees:view',
+    'shifts:view',
+    'holidays:view',
+    'attendance:view',
+    'reports:view',
+    'activityLogs:view',
+    'dashboard:super',
+  ],
   ADMIN: [
     'companies:view',
     'subCompanies:view',
@@ -112,6 +127,21 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     'configuration:manage',
     'dashboard:hr',
   ],
+};
+
+/** Roles that use the platform-level (`/super-admin`) portal. */
+export const SUPER_ADMIN_ROLES: UserRole[] = ['SUPER_ADMIN', 'SUPER_ADMIN_VIEWER'];
+
+export function isSuperAdminRole(role?: UserRole | null): boolean {
+  return !!role && SUPER_ADMIN_ROLES.includes(role);
+}
+
+/** Human-readable role names, shared by badges, the profile page and the top bar. */
+export const ROLE_LABELS: Record<UserRole, string> = {
+  SUPER_ADMIN: 'Super Admin',
+  SUPER_ADMIN_VIEWER: 'Super Admin (Read-only)',
+  ADMIN: 'Admin',
+  HR: 'HR',
 };
 
 export function hasPermission(role: UserRole, permission: Permission): boolean {

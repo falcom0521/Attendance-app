@@ -19,6 +19,7 @@ const ACTION_OPTIONS = [
 
 const ROLE_OPTIONS = [
   { label: 'Super Admin', value: 'SUPER_ADMIN' },
+  { label: 'Super Admin (Read-only)', value: 'SUPER_ADMIN_VIEWER' },
   { label: 'Admin', value: 'ADMIN' },
   { label: 'HR', value: 'HR' },
 ];
@@ -35,6 +36,7 @@ export function ActivityLogsPage() {
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
 
+  const rangeError = startDate && endDate && startDate > endDate ? 'From date must be on or before the To date' : '';
   const { data: companies } = useCompanies({ page: 1, pageSize: 100 });
   const { data, isLoading, error, refetch } = useActivityLogs({
     page, pageSize: 15,
@@ -43,8 +45,9 @@ export function ActivityLogsPage() {
     action: action || undefined,
     role: role || undefined,
     companyId: companyId || undefined,
-    startDate: startDate || undefined,
-    endDate: endDate || undefined,
+    // An impossible range is not sent to the server; the message below explains why nothing changed.
+    startDate: rangeError ? undefined : startDate || undefined,
+    endDate: rangeError ? undefined : endDate || undefined,
   });
 
   const filtered = !!(search || module || action || role || companyId || startDate || endDate);
@@ -70,6 +73,7 @@ export function ActivityLogsPage() {
         <div className="w-40"><Input label="To" type="date" value={endDate} min={startDate || undefined} onChange={(e) => on(setEndDate)(e.target.value)} /></div>
         {filtered && <Button variant="ghost" size="sm" onClick={reset}>Clear filters</Button>}
       </div>
+      {rangeError && <p className="form-error -mt-2" role="alert">{rangeError}</p>}
       <ActivityLogTable
         logs={data?.data ?? []}
         loading={isLoading && !data}

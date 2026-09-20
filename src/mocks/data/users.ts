@@ -16,6 +16,21 @@ export const mockUsers: AppUser[] = [
     createdAt: '2022-01-01T09:00:00Z',
     updatedAt: '2026-09-19T08:30:00Z',
   },
+  // Read-only Super Admin (created by the Super Admin; platform-level, so no company)
+  {
+    id: 'user-008',
+    firstName: 'Kavya',
+    lastName: 'Iyer',
+    fullName: 'Kavya Iyer',
+    email: 'viewer@example.com',
+    phone: '+91-9876543219',
+    username: 'sa_viewer',
+    role: 'SUPER_ADMIN_VIEWER',
+    status: 'ACTIVE',
+    lastLogin: '2026-09-19T11:00:00Z',
+    createdAt: '2026-09-10T09:00:00Z',
+    updatedAt: '2026-09-19T11:00:00Z',
+  },
   // Admins
   {
     id: 'user-002',

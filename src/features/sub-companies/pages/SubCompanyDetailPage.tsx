@@ -26,6 +26,8 @@ import { useDailyAttendance } from '@/features/attendance/hooks/useAttendance';
 import { useShifts } from '@/features/shifts/hooks/useShifts';
 import { useHolidays } from '@/features/holidays/hooks/useHolidays';
 import { formatDate, formatDateTime, todayISO } from '@/utils/date';
+import { useAuthStore } from '@/store/authStore';
+import { hasPermission } from '@/config/permissions';
 import type { Employee } from '@/types/employee';
 import type { Device } from '@/types/device';
 import type { AppUser } from '@/types/user';
@@ -41,6 +43,9 @@ export function SubCompanyDetailPage() {
   const { subCompanyId = '' } = useParams<{ subCompanyId: string }>();
   const navigate = useNavigate();
   const toast = useToast();
+  const { user } = useAuthStore();
+  const canUpdate = !!user && hasPermission(user.role, 'subCompanies:update');
+  const canEditUsers = !!user && hasPermission(user.role, 'hr:update');
 
   const [tab, setTab] = useState('overview');
   const [editOpen, setEditOpen] = useState(false);
@@ -164,12 +169,14 @@ export function SubCompanyDetailPage() {
               </p>
               <p className="text-xs text-surface-400 mt-1">{[sub.city, sub.state, sub.country].filter(Boolean).join(', ')}</p>
             </div>
-            <div className="flex flex-wrap gap-2">
-              <Button variant="outline" size="sm" leftIcon={<Pencil className="h-4 w-4" />} onClick={() => setEditOpen(true)}>Edit</Button>
-              <Button variant={active ? 'danger' : 'primary'} size="sm" leftIcon={active ? <ToggleRight className="h-4 w-4" /> : <ToggleLeft className="h-4 w-4" />} onClick={() => setToggleOpen(true)}>
-                {active ? 'Deactivate' : 'Activate'}
-              </Button>
-            </div>
+            {canUpdate && (
+              <div className="flex flex-wrap gap-2">
+                <Button variant="outline" size="sm" leftIcon={<Pencil className="h-4 w-4" />} onClick={() => setEditOpen(true)}>Edit</Button>
+                <Button variant={active ? 'danger' : 'primary'} size="sm" leftIcon={active ? <ToggleRight className="h-4 w-4" /> : <ToggleLeft className="h-4 w-4" />} onClick={() => setToggleOpen(true)}>
+                  {active ? 'Deactivate' : 'Activate'}
+                </Button>
+              </div>
+            )}
           </div>
         </CardBody>
       </Card>
@@ -273,7 +280,7 @@ export function SubCompanyDetailPage() {
       )}
 
       <SubCompanyFormDialog open={editOpen} onClose={() => setEditOpen(false)} subCompany={sub} />
-      <UserDetailDialog user={viewUser} onClose={() => setViewUser(null)} onEdit={(u) => { setViewUser(null); setEditUser(u); }} />
+      <UserDetailDialog user={viewUser} onClose={() => setViewUser(null)} onEdit={canEditUsers ? (u) => { setViewUser(null); setEditUser(u); } : undefined} />
       <UserFormDialog open={!!editUser} onClose={() => setEditUser(null)} editUser={editUser} />
       <ConfirmDialog
         open={toggleOpen} onClose={() => setToggleOpen(false)} onConfirm={handleToggle}

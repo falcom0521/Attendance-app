@@ -14,23 +14,31 @@ import { useAuthStore } from '@/store/authStore';
 import { useUser, useUpdateUser } from '@/features/users/hooks/useUsers';
 import { authService } from '@/features/auth/services/auth.service';
 import { formatDate, formatDateTime } from '@/utils/date';
+import { ROLE_LABELS } from '@/config/permissions';
+import { personName, phoneField, newPasswordField } from '@/lib/validation';
 
-const ROLE_LABEL: Record<string, string> = { SUPER_ADMIN: 'Super Admin', ADMIN: 'Admin', HR: 'HR' };
 
 const profileSchema = z.object({
-  firstName: z.string().trim().min(1, 'First name is required'),
-  lastName: z.string().trim().min(1, 'Last name is required'),
-  phone: z.string().trim().min(7, 'Enter a valid phone number'),
+  firstName: personName('First name'),
+  lastName: personName('Last name'),
+  phone: phoneField,
 });
 type ProfileForm = z.infer<typeof profileSchema>;
 
 const passwordSchema = z
   .object({
     currentPassword: z.string().min(1, 'Enter your current password'),
-    newPassword: z.string().min(8, 'Use at least 8 characters'),
+    newPassword: newPasswordField,
     confirmPassword: z.string().min(1, 'Confirm the new password'),
   })
-  .refine((v) => v.newPassword === v.confirmPassword, { path: ['confirmPassword'], message: 'Passwords do not match' });
+  .superRefine((v, ctx) => {
+    if (v.confirmPassword && v.newPassword !== v.confirmPassword) {
+      ctx.addIssue({ code: 'custom', path: ['confirmPassword'], message: 'Passwords do not match' });
+    }
+    if (v.currentPassword && v.newPassword === v.currentPassword) {
+      ctx.addIssue({ code: 'custom', path: ['newPassword'], message: 'New password must be different from the current one' });
+    }
+  });
 type PasswordForm = z.infer<typeof passwordSchema>;
 
 export function ProfilePage() {
@@ -41,9 +49,10 @@ export function ProfilePage() {
 
   const profileForm = useForm<ProfileForm>({
     resolver: zodResolver(profileSchema),
+    mode: 'onTouched',
     defaultValues: { firstName: user?.firstName ?? '', lastName: user?.lastName ?? '', phone: '' },
   });
-  const passwordForm = useForm<PasswordForm>({ resolver: zodResolver(passwordSchema) });
+  const passwordForm = useForm<PasswordForm>({ resolver: zodResolver(passwordSchema), mode: 'onTouched' });
 
   // Phone lives on the user record, so fill the form once it loads (without clobbering edits).
   useEffect(() => {
@@ -53,7 +62,7 @@ export function ProfilePage() {
   }, [profile, profileForm]);
 
   if (!user) return null;
-  const roleLabel = ROLE_LABEL[user.role] ?? user.role;
+  const roleLabel = ROLE_LABELS[user.role] ?? user.role;
   const fullName = `${user.firstName} ${user.lastName}`;
 
   async function onSaveProfile(data: ProfileForm) {
@@ -99,7 +108,7 @@ export function ProfilePage() {
               </div>
             </div>
 
-            <form onSubmit={profileForm.handleSubmit(onSaveProfile)} className="space-y-4">
+            <form noValidate onSubmit={profileForm.handleSubmit(onSaveProfile)} className="space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <Input label="First Name" required error={pErrors.firstName?.message} {...profileForm.register('firstName')} />
                 <Input label="Last Name" required error={pErrors.lastName?.message} {...profileForm.register('lastName')} />
@@ -129,9 +138,9 @@ export function ProfilePage() {
         <Card className="self-start">
           <CardHeader title="Change Password" subtitle="Choose a strong password you don't use elsewhere" />
           <CardBody>
-            <form onSubmit={passwordForm.handleSubmit(onChangePassword)} className="space-y-4 max-w-sm">
+            <form noValidate onSubmit={passwordForm.handleSubmit(onChangePassword)} className="space-y-4 max-w-sm">
               <Input label="Current Password" type="password" autoComplete="current-password" required error={wErrors.currentPassword?.message} {...passwordForm.register('currentPassword')} />
-              <Input label="New Password" type="password" autoComplete="new-password" required error={wErrors.newPassword?.message} hint="At least 8 characters" {...passwordForm.register('newPassword')} />
+              <Input label="New Password" type="password" autoComplete="new-password" required error={wErrors.newPassword?.message} hint="8+ characters with a letter and a number" {...passwordForm.register('newPassword')} />
               <Input label="Confirm New Password" type="password" autoComplete="new-password" required error={wErrors.confirmPassword?.message} {...passwordForm.register('confirmPassword')} />
               <Button type="submit" loading={changingPassword}>Update Password</Button>
             </form>

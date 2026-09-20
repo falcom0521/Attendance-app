@@ -10,7 +10,10 @@ export function DeallocateDeviceDialog({ open, device, onClose }: { open: boolea
   const deallocate = useDeallocateDevice();
   const [reason, setReason] = useState('');
 
+  const tooLong = reason.length > 200;
+
   async function handleConfirm() {
+    if (tooLong) return;
     try {
       await deallocate.mutateAsync({ deviceId: device.id, reason: reason.trim() || undefined });
       toast.success('Device deallocated', `${device.deviceId} is now unallocated`);
@@ -31,7 +34,7 @@ export function DeallocateDeviceDialog({ open, device, onClose }: { open: boolea
       footer={
         <>
           <Button variant="outline" onClick={onClose} disabled={deallocate.isPending}>Cancel</Button>
-          <Button variant="danger" onClick={handleConfirm} loading={deallocate.isPending}>Deallocate</Button>
+          <Button variant="danger" onClick={handleConfirm} loading={deallocate.isPending} disabled={tooLong}>Deallocate</Button>
         </>
       }
     >
@@ -44,9 +47,15 @@ export function DeallocateDeviceDialog({ open, device, onClose }: { open: boolea
         rows={3}
         value={reason}
         onChange={(e) => setReason(e.target.value)}
+        maxLength={220}
         placeholder="e.g. Office closed, device being redeployed…"
-        className="form-input resize-none text-sm"
+        className={`form-input resize-none text-sm ${tooLong ? 'form-input-error' : ''}`}
+        aria-invalid={tooLong}
       />
+      <div className="mt-1 flex items-start justify-between gap-3">
+        {tooLong ? <p className="form-error" role="alert">Reason must be 200 characters or fewer</p> : <span />}
+        <span className={`text-xs ${tooLong ? 'text-danger-600' : 'text-surface-400'}`}>{reason.length}/200</span>
+      </div>
     </Dialog>
   );
 }

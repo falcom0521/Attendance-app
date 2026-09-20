@@ -1,6 +1,10 @@
 import { useState, useMemo, useRef, useEffect } from 'react';
 import { Download, FileBarChart, FileText, Users, Calendar, Search, X, CheckSquare, Square, ChevronDown, UserCircle } from 'lucide-react';
 import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { differenceInCalendarDays, parseISO } from 'date-fns';
+import { pastOrTodayDate, dateField } from '@/lib/validation';
 import { PageHeader } from '@/components/common/PageHeader';
 import { Card, CardHeader, CardBody } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
@@ -32,6 +36,63 @@ const FORMAT_OPTIONS = [
   { label: 'CSV',           value: 'CSV'   },
 ];
 
+// ── Validation ──────────────────────────────────────────────────────────────
+const formatField = z.enum(['EXCEL', 'PDF', 'CSV'], { errorMap: () => ({ message: 'Choose an export format' }) });
+
+/** A report month cannot be in the future. */
+function refineNotFutureMonth(v: { month: string; year: string }, ctx: z.RefinementCtx) {
+  const { month, year } = currentMonthYear();
+  if (Number(v.year) * 12 + Number(v.month) > year * 12 + month) {
+    ctx.addIssue({ code: 'custom', path: ['month'], message: 'Cannot generate a report for a future month' });
+  }
+}
+
+const dailySchema = z.object({
+  date: pastOrTodayDate('Date'),
+  department: z.string(),
+  format: formatField,
+});
+type DailyForm = z.infer<typeof dailySchema>;
+
+const monthlySchema = z
+  .object({
+    month: z.string().min(1, 'Select a month'),
+    year: z.string().min(1, 'Select a year'),
+    department: z.string(),
+    format: formatField,
+  })
+  .superRefine(refineNotFutureMonth);
+type MonthlyForm = z.infer<typeof monthlySchema>;
+
+const employeeSchema = z
+  .object({
+    employeeId: z.string().min(1, 'Select an employee'),
+    month: z.string().min(1, 'Select a month'),
+    year: z.string().min(1, 'Select a year'),
+    format: formatField,
+  })
+  .superRefine(refineNotFutureMonth);
+type EmployeeForm = z.infer<typeof employeeSchema>;
+
+const MAX_RANGE_DAYS = 92;
+const MAX_MULTI_EMPLOYEES = 100;
+
+/** Validates the multi-employee report settings; returns field -> message. */
+function validateMulti(start: string, end: string, employeeCount: number): { dates?: string; employees?: string } {
+  const errors: { dates?: string; employees?: string } = {};
+  const startCheck = pastOrTodayDate('From date').safeParse(start);
+  const endCheck = pastOrTodayDate('To date').safeParse(end);
+  if (!startCheck.success) errors.dates = startCheck.error.issues[0]?.message;
+  else if (!endCheck.success) errors.dates = endCheck.error.issues[0]?.message;
+  else if (dateField('Date').safeParse(start).success && end < start) errors.dates = 'To date must be on or after the from date';
+  else if (differenceInCalendarDays(parseISO(end), parseISO(start)) + 1 > MAX_RANGE_DAYS) {
+    errors.dates = `Date range cannot be longer than ${MAX_RANGE_DAYS} days`;
+  }
+  if (employeeCount === 0) errors.employees = 'Select at least one employee';
+  else if (employeeCount > MAX_MULTI_EMPLOYEES) errors.employees = `Select at most ${MAX_MULTI_EMPLOYEES} employees`;
+  return errors;
+}
+
 // ── Employee combobox ─────────────────────────────────────────────────────
 interface EmployeeComboboxProps {
   employees: Employee[];
@@ -40,6 +101,7 @@ interface EmployeeComboboxProps {
   search: string;
   onSearchChange: (v: string) => void;
   filtered: Employee[];
+  error?: string;
 }
 
 function EmployeeCombobox({
@@ -49,6 +111,7 @@ function EmployeeCombobox({
   search,
   onSearchChange,
   filtered,
+  error,
 }: EmployeeComboboxProps) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -88,7 +151,7 @@ function EmployeeCombobox({
         className={cn(
           'w-full flex items-center gap-2.5 px-3 py-2 rounded-lg border text-sm transition-all duration-150',
           'bg-white text-left focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500',
-          open ? 'border-brand-500 ring-2 ring-brand-500' : 'border-surface-300 hover:border-surface-400',
+          open ? 'border-brand-500 ring-2 ring-brand-500' : error ? 'border-danger-400' : 'border-surface-300 hover:border-surface-400',
         )}
       >
         {selected ? (
@@ -119,6 +182,10 @@ function EmployeeCombobox({
         )}
       </button>
 
+      {error && (
+        <p className="form-error mt-1" role="alert">{error}</p>
+      )}
+
       {/* Dropdown */}
       {open && (
         <div className="absolute z-50 mt-1.5 w-full bg-white border border-surface-200 rounded-xl shadow-soft-lg overflow-hidden animate-slide-down">
@@ -128,6 +195,7 @@ function EmployeeCombobox({
               <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-surface-400 pointer-events-none" />
               <input
                 autoFocus
+                maxLength={100}
                 type="text"
                 placeholder="Search by name, code or department…"
                 value={search}
@@ -283,12 +351,22 @@ export function ReportsPage() {
   }
 
   // ── React Hook Form ─────────────────────────────────────────────
-  const { register: regDaily,    handleSubmit: submitDaily    } = useForm({ defaultValues: { date: todayISO(), department: '', format: 'EXCEL' } });
-  const { register: regMonthly,  handleSubmit: submitMonthly  } = useForm({ defaultValues: { month: String(curMonth), year: String(curYear), department: '', format: 'EXCEL' } });
-  const { register: regEmployee, handleSubmit: submitEmployee, watch, setValue } = useForm({ defaultValues: { employeeId: '', month: String(curMonth), year: String(curYear), format: 'EXCEL' } });
+  const { register: regDaily, handleSubmit: submitDaily, formState: { errors: dailyErrors } } = useForm<DailyForm>({
+    resolver: zodResolver(dailySchema), mode: 'onTouched',
+    defaultValues: { date: todayISO(), department: '', format: 'EXCEL' },
+  });
+  const { register: regMonthly, handleSubmit: submitMonthly, formState: { errors: monthlyErrors } } = useForm<MonthlyForm>({
+    resolver: zodResolver(monthlySchema), mode: 'onTouched',
+    defaultValues: { month: String(curMonth), year: String(curYear), department: '', format: 'EXCEL' },
+  });
+  const { register: regEmployee, handleSubmit: submitEmployee, watch, setValue, formState: { errors: employeeErrors } } = useForm<EmployeeForm>({
+    resolver: zodResolver(employeeSchema), mode: 'onTouched',
+    defaultValues: { employeeId: '', month: String(curMonth), year: String(curYear), format: 'EXCEL' },
+  });
+  const [multiErrors, setMultiErrors] = useState<{ dates?: string; employees?: string }>({});
 
   // ── Handlers ────────────────────────────────────────────────────
-  async function handleDaily(data: { date: string; format: string }) {
+  async function handleDaily(data: DailyForm) {
     setGenerating('daily');
     try {
       await reportService.exportDailyReport(data.date, {}, data.format as ExportFormat);
@@ -297,7 +375,7 @@ export function ReportsPage() {
     finally { setGenerating(''); }
   }
 
-  async function handleMonthly(data: { month: string; year: string; format: string }) {
+  async function handleMonthly(data: MonthlyForm) {
     setGenerating('monthly');
     try {
       await reportService.exportMonthlyReport(Number(data.month), Number(data.year), {}, data.format as ExportFormat);
@@ -306,7 +384,7 @@ export function ReportsPage() {
     finally { setGenerating(''); }
   }
 
-  async function handleEmployee(data: { employeeId: string; month: string; year: string; format: string }) {
+  async function handleEmployee(data: EmployeeForm) {
     setGenerating('employee');
     try {
       await reportService.generateReport({
@@ -322,10 +400,9 @@ export function ReportsPage() {
   }
 
   async function handleMulti() {
-    if (selectedEmployees.length === 0) {
-      toast.warning('Select at least one employee');
-      return;
-    }
+    const found = validateMulti(multiStartDate, multiEndDate, selectedEmployees.length);
+    setMultiErrors(found);
+    if (found.dates || found.employees) return;
     setGenerating('multi');
     try {
       await reportService.generateReport({
@@ -360,8 +437,8 @@ export function ReportsPage() {
             subtitle="Generate attendance report for a specific date"
           />
           <CardBody>
-            <form onSubmit={submitDaily(handleDaily)} className="space-y-4 max-w-md">
-              <Input label="Date" type="date" required {...regDaily('date')} />
+            <form noValidate onSubmit={submitDaily(handleDaily)} className="space-y-4 max-w-md">
+              <Input label="Date" type="date" required max={todayISO()} error={dailyErrors.date?.message} {...regDaily('date')} />
               <Select label="Department" options={deptOptions} {...regDaily('department')} />
               <Select label="Export Format" options={FORMAT_OPTIONS} {...regDaily('format')} />
               <Button type="submit" leftIcon={<Download className="h-4 w-4" />} loading={generating === 'daily'}>
@@ -380,10 +457,10 @@ export function ReportsPage() {
             subtitle="Generate attendance report for a full month"
           />
           <CardBody>
-            <form onSubmit={submitMonthly(handleMonthly)} className="space-y-4 max-w-md">
+            <form noValidate onSubmit={submitMonthly(handleMonthly)} className="space-y-4 max-w-md">
               <div className="grid grid-cols-2 gap-4">
-                <Select label="Month" options={MONTH_OPTIONS} required {...regMonthly('month')} />
-                <Select label="Year"  options={YEAR_OPTIONS}  required {...regMonthly('year')} />
+                <Select label="Month" options={MONTH_OPTIONS} required error={monthlyErrors.month?.message} {...regMonthly('month')} />
+                <Select label="Year"  options={YEAR_OPTIONS}  required error={monthlyErrors.year?.message} {...regMonthly('year')} />
               </div>
               <Select label="Department" options={deptOptions} {...regMonthly('department')} />
               <Select label="Export Format" options={FORMAT_OPTIONS} {...regMonthly('format')} />
@@ -403,21 +480,22 @@ export function ReportsPage() {
             subtitle="Individual employee attendance report"
           />
           <CardBody>
-            <form onSubmit={submitEmployee(handleEmployee)} className="space-y-4 max-w-md">
+            <form noValidate onSubmit={submitEmployee(handleEmployee)} className="space-y-4 max-w-md">
 
               {/* Searchable employee combobox */}
               <EmployeeCombobox
                 employees={employees}
                 value={watch('employeeId')}
-                onChange={(id) => setValue('employeeId', id)}
+                onChange={(id) => setValue('employeeId', id, { shouldValidate: true })}
                 search={empSearch}
                 onSearchChange={setEmpSearch}
                 filtered={filteredEmpOptions}
+                error={employeeErrors.employeeId?.message}
               />
 
               <div className="grid grid-cols-2 gap-4">
-                <Select label="Month" options={MONTH_OPTIONS} required {...regEmployee('month')} />
-                <Select label="Year"  options={YEAR_OPTIONS}  required {...regEmployee('year')} />
+                <Select label="Month" options={MONTH_OPTIONS} required error={employeeErrors.month?.message} {...regEmployee('month')} />
+                <Select label="Year"  options={YEAR_OPTIONS}  required error={employeeErrors.year?.message} {...regEmployee('year')} />
               </div>
               <Select label="Export Format" options={FORMAT_OPTIONS} {...regEmployee('format')} />
               <Button type="submit" leftIcon={<Download className="h-4 w-4" />} loading={generating === 'employee'}>
@@ -555,16 +633,22 @@ export function ReportsPage() {
                 <Input
                   label="From Date"
                   type="date"
+                  required
+                  max={todayISO()}
                   value={multiStartDate}
-                  onChange={(e) => setMultiStartDate(e.target.value)}
+                  onChange={(e) => { setMultiStartDate(e.target.value); setMultiErrors((m) => ({ ...m, dates: undefined })); }}
                 />
                 <Input
                   label="To Date"
                   type="date"
+                  required
+                  min={multiStartDate || undefined}
+                  max={todayISO()}
                   value={multiEndDate}
-                  onChange={(e) => setMultiEndDate(e.target.value)}
+                  onChange={(e) => { setMultiEndDate(e.target.value); setMultiErrors((m) => ({ ...m, dates: undefined })); }}
                 />
               </div>
+              {multiErrors.dates && <p className="form-error -mt-2" role="alert">{multiErrors.dates}</p>}
               <Select
                 label="Export Format"
                 options={FORMAT_OPTIONS}
@@ -611,13 +695,13 @@ export function ReportsPage() {
                   onClick={handleMulti}
                   leftIcon={<Download className="h-4 w-4" />}
                   loading={generating === 'multi'}
-                  disabled={selectedEmployees.length === 0}
                   className="w-full"
                 >
                   {selectedEmployees.length === 0
-                    ? 'Select employees to generate'
+                    ? 'Generate Report'
                     : `Generate Report (${selectedEmployees.length} employee${selectedEmployees.length > 1 ? 's' : ''})`}
                 </Button>
+                {multiErrors.employees && <p className="form-error mt-2 text-center" role="alert">{multiErrors.employees}</p>}
               </div>
             </CardBody>
           </Card>

@@ -12,17 +12,36 @@ import { useAuthStore } from '@/store/authStore';
 import { useSubCompanyScope } from '@/hooks/useSubCompanyScope';
 import { useAttendanceSettings } from '@/features/configuration/hooks/useAttendanceSettings';
 import type { Shift } from '@/types/shift';
+import { requiredText, timeField, optionalTimeField, intInRange } from '@/lib/validation';
 
-const schema = z.object({
-  name: z.string().min(2, 'Required'),
-  startTime: z.string().min(1, 'Required'),
-  endTime: z.string().min(1, 'Required'),
-  breakStartTime: z.string().optional(),
-  breakEndTime: z.string().optional(),
-  gracePeriodMinutes: z.number().min(0).max(60),
-  status: z.enum(['ACTIVE', 'INACTIVE']),
-  subCompanyId: z.string().min(1, 'Select a sub company'),
-});
+const schema = z
+  .object({
+    name: requiredText('Shift name', { min: 2, max: 60 }),
+    startTime: timeField('Start time'),
+    endTime: timeField('End time'),
+    breakStartTime: optionalTimeField('Break start'),
+    breakEndTime: optionalTimeField('Break end'),
+    gracePeriodMinutes: intInRange('Grace period', 0, 60),
+    status: z.enum(['ACTIVE', 'INACTIVE']),
+    subCompanyId: z.string().min(1, 'Select a sub company'),
+  })
+  .superRefine((v, ctx) => {
+    if (v.startTime && v.endTime && v.startTime === v.endTime) {
+      ctx.addIssue({ code: 'custom', path: ['endTime'], message: 'End time must be different from start time' });
+    }
+    const hasStart = !!v.breakStartTime;
+    const hasEnd = !!v.breakEndTime;
+    if (hasStart !== hasEnd) {
+      ctx.addIssue({
+        code: 'custom',
+        path: [hasStart ? 'breakEndTime' : 'breakStartTime'],
+        message: 'Enter both break start and break end, or leave both empty',
+      });
+    } else if (hasStart && v.breakEndTime! <= v.breakStartTime!) {
+      ctx.addIssue({ code: 'custom', path: ['breakEndTime'], message: 'Break end must be after break start' });
+    }
+  });
+
 type FormData = z.infer<typeof schema>;
 
 export function ShiftFormDialog({ open, onClose, shift }: { open: boolean; onClose: () => void; shift?: Shift | null }) {
@@ -37,6 +56,7 @@ export function ShiftFormDialog({ open, onClose, shift }: { open: boolean; onClo
 
   const { register, handleSubmit, reset, formState: { errors, isSubmitting } } = useForm<FormData>({
     resolver: zodResolver(schema),
+    mode: 'onTouched',
     defaultValues: { status: 'ACTIVE', gracePeriodMinutes: defaultGrace, subCompanyId: scope.subCompanyId ?? '' },
   });
 
@@ -67,7 +87,7 @@ export function ShiftFormDialog({ open, onClose, shift }: { open: boolean; onClo
     <Dialog open={open} onClose={onClose} title={isEdit ? 'Edit Shift' : 'Add Shift'} size="md"
       footer={<><Button variant="outline" onClick={onClose}>Cancel</Button><Button form="shift-form" type="submit" loading={isSubmitting}>{isEdit ? 'Save' : 'Create'}</Button></>}
     >
-      <form id="shift-form" onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+      <form noValidate id="shift-form" onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         {scope.isAdmin && (isEdit ? (
           <Input label="Sub Company" value={scope.subCompanies.find((sc) => sc.id === shift?.subCompanyId)?.name ?? ''} readOnly />
         ) : (

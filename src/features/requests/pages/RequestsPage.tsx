@@ -97,7 +97,7 @@ export function RequestsPage() {
             <Select options={TYPE_OPTIONS} value={type} onChange={(e) => { setType(e.target.value); setPage(1); }} />
           </div>
           <div className="w-64">
-            <Input placeholder="Search employee…" value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); }} />
+            <Input placeholder="Search employee…" maxLength={100} value={search} onChange={(e) => { setSearch(e.target.value); setPage(1); }} />
           </div>
         </div>
         <RequestsTable

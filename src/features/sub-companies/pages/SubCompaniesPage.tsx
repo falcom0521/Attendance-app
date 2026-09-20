@@ -10,6 +10,8 @@ import { ConfirmDialog } from '@/components/ui/Dialog';
 import { useSubCompanies, useToggleSubCompanyStatus } from '@/features/companies/hooks/useCompanies';
 import { SubCompanyFormDialog } from '../components/SubCompanyFormDialog';
 import { useToast } from '@/components/feedback/ToastContext';
+import { useAuthStore } from '@/store/authStore';
+import { hasPermission } from '@/config/permissions';
 import type { SubCompany } from '@/types/company';
 import { formatDate } from '@/utils/date';
 
@@ -22,6 +24,9 @@ const STATUS_OPTIONS = [
 export function SubCompaniesPage() {
   const toast = useToast();
   const navigate = useNavigate();
+  const { user } = useAuthStore();
+  const canCreate = !!user && hasPermission(user.role, 'subCompanies:create');
+  const canUpdate = !!user && hasPermission(user.role, 'subCompanies:update');
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState('');
@@ -65,6 +70,7 @@ export function SubCompaniesPage() {
           <button onClick={(e) => { e.stopPropagation(); navigate(`/super-admin/sub-companies/${row.id}`); }} className="p-1.5 rounded-lg text-surface-400 hover:text-brand-600 hover:bg-brand-50 transition-colors" title="View details">
             <Eye className="h-4 w-4" />
           </button>
+          {canUpdate && (<>
           <button onClick={(e) => { e.stopPropagation(); setEditSub(row); setFormOpen(true); }}
             className="p-1.5 rounded-lg text-surface-400 hover:text-brand-600 hover:bg-brand-50 transition-colors" title="Edit">
             <Pencil className="h-4 w-4" />
@@ -74,6 +80,7 @@ export function SubCompaniesPage() {
             title={row.status === 'ACTIVE' ? 'Deactivate' : 'Activate'}>
             {row.status === 'ACTIVE' ? <ToggleRight className="h-4 w-4" /> : <ToggleLeft className="h-4 w-4" />}
           </button>
+          </>)}
         </div>
       ),
     },
@@ -94,7 +101,7 @@ export function SubCompaniesPage() {
         title="Sub Companies"
         subtitle="Manage all branch offices and sub companies"
         breadcrumbs={[{ label: 'Super Admin' }, { label: 'Sub Companies' }]}
-        action={<Button leftIcon={<Plus className="h-4 w-4" />} onClick={() => { setEditSub(null); setFormOpen(true); }}>Add Sub Company</Button>}
+        action={canCreate && <Button leftIcon={<Plus className="h-4 w-4" />} onClick={() => { setEditSub(null); setFormOpen(true); }}>Add Sub Company</Button>}
       />
       <div className="flex flex-wrap gap-3">
         <div className="w-40">
@@ -108,7 +115,7 @@ export function SubCompaniesPage() {
         searchPlaceholder="Search sub companies..."
         onRowClick={(row) => navigate(`/super-admin/sub-companies/${row.id}`)}
         pagination={data ? { page, totalPages: data.totalPages, total: data.total, pageSize: data.pageSize, onPageChange: setPage } : undefined}
-        emptyState={{ title: 'No sub companies found', icon: <GitBranch className="h-8 w-8" />, action: { label: 'Add Sub Company', onClick: () => setFormOpen(true), icon: <Plus className="h-4 w-4" /> } }}
+        emptyState={{ title: 'No sub companies found', icon: <GitBranch className="h-8 w-8" />, action: canCreate ? { label: 'Add Sub Company', onClick: () => setFormOpen(true), icon: <Plus className="h-4 w-4" /> } : undefined }}
       />
       <SubCompanyFormDialog open={formOpen} onClose={() => { setFormOpen(false); setEditSub(null); }} subCompany={editSub} />
       <ConfirmDialog open={!!toggleTarget} onClose={() => setToggleTarget(null)} onConfirm={handleToggle}

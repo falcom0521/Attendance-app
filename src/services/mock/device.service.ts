@@ -5,6 +5,7 @@ import type {
 import type { PaginatedResponse, PaginationParams, FilterParams } from '@/types/common';
 import { mockDevices, mockDeviceAllocations } from '@/mocks/data/devices';
 import { sleep } from '@/lib/utils';
+import { assertWritable } from './writeGuard';
 import { format, subDays } from 'date-fns';
 import { getAllAttendanceRecords } from './attendance.service';
 import { MANUAL_DEVICE_ID } from './attendanceEngine';
@@ -49,6 +50,7 @@ export const deviceService = {
   },
 
   async createDevice(payload: CreateDevicePayload): Promise<Device> {
+    assertWritable();
     await sleep(600);
     const newDevice: Device = {
       ...payload,
@@ -63,6 +65,7 @@ export const deviceService = {
   },
 
   async updateDevice(id: string, payload: Partial<CreateDevicePayload>): Promise<Device> {
+    assertWritable();
     await sleep(500);
     const idx = devices.findIndex((d) => d.id === id);
     if (idx === -1) throw new Error('Device not found');
@@ -72,6 +75,7 @@ export const deviceService = {
   },
 
   async allocateDevice(payload: AllocateDevicePayload): Promise<DeviceAllocation> {
+    assertWritable();
     await sleep(700);
     const device = devices.find((d) => d.id === payload.deviceId);
     if (!device) throw new Error('Device not found');
@@ -144,6 +148,7 @@ export const deviceService = {
 
   /** Returns a device to the spare pool, closing its active allocation. */
   async deallocateDevice(payload: DeallocateDevicePayload): Promise<Device> {
+    assertWritable();
     await sleep(600);
     const idx = devices.findIndex((d) => d.id === payload.deviceId);
     if (idx === -1) throw new Error('Device not found');
