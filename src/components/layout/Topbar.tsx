@@ -6,6 +6,7 @@ import { Avatar } from '@/components/ui/Avatar';
 import { useUIStore } from '@/store/uiStore';
 import { useAuth } from '@/features/auth/hooks/useAuth';
 import { isSuperAdminRole, ROLE_LABELS } from '@/config/permissions';
+import { ThemeToggle } from '@/components/ui/ThemeToggle';
 
 interface TopbarProps {
   contextLabel?: React.ReactNode;
@@ -36,7 +37,7 @@ export function Topbar({ contextLabel }: TopbarProps) {
   const profilePath = isSuperAdminRole(user?.role) ? '/super-admin/profile' : user?.role === 'ADMIN' ? '/admin/profile' : '/hr/profile';
 
   return (
-    <header className="h-[60px] bg-white border-b border-surface-200 flex items-center justify-between px-4 gap-4 flex-shrink-0">
+    <header className="h-[60px] bg-card border-b border-surface-200 flex items-center justify-between px-4 gap-4 flex-shrink-0">
       {/* Left: mobile hamburger + context label */}
       <div className="flex items-center gap-2">
         <button
@@ -50,8 +51,9 @@ export function Topbar({ contextLabel }: TopbarProps) {
         {contextLabel && contextLabel}
       </div>
 
-      {/* Right: profile only */}
+      {/* Right: theme toggle + profile */}
       <div className="flex items-center gap-2">
+        <ThemeToggle />
 
         {/* Profile dropdown */}
         <div ref={profileRef} className="relative">
@@ -77,7 +79,7 @@ export function Topbar({ contextLabel }: TopbarProps) {
           </button>
 
           {profileOpen && (
-            <div className="absolute right-0 top-full mt-2 w-52 bg-white rounded-xl shadow-soft-lg border border-surface-100 z-50 py-1 animate-fade-in">
+            <div className="absolute right-0 top-full mt-2 w-52 bg-card rounded-xl shadow-soft-lg border border-surface-100 z-50 py-1 animate-fade-in">
               <div className="px-4 py-3 border-b border-surface-100">
                 <p className="text-sm font-semibold text-surface-900">{user?.firstName} {user?.lastName}</p>
                 <p className="text-xs text-surface-500">{user?.email}</p>

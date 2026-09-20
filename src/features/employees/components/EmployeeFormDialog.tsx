@@ -13,7 +13,7 @@ import { useDepartments } from '@/features/configuration/hooks/useDepartments';
 import { useSubCompanyScope } from '@/hooks/useSubCompanyScope';
 import { useAuthStore } from '@/store/authStore';
 import type { Employee } from '@/types/employee';
-import { requiredText, personName, codeField, emailField, phoneField, birthDateField, dateWithinFuture } from '@/lib/validation';
+import { requiredText, personName, codeField, emailField, phoneField, birthDateField, dateWithinFuture, joiningDateProblem, MIN_EMPLOYEE_AGE } from '@/lib/validation';
 
 const schema = z.object({
   employeeCode: codeField('Employee code', 2, 20),
@@ -21,7 +21,7 @@ const schema = z.object({
   lastName: personName('Last name'),
   email: emailField,
   phone: phoneField,
-  dateOfBirth: birthDateField(16),
+  dateOfBirth: birthDateField(MIN_EMPLOYEE_AGE),
   address: requiredText('Address', { min: 5, max: 200 }),
   department: z.string().min(1, 'Select a department'),
   designation: requiredText('Designation', { min: 2, max: 60 }),
@@ -30,7 +30,12 @@ const schema = z.object({
   status: z.enum(['ACTIVE', 'INACTIVE']),
   subCompanyId: z.string().min(1, 'Select a sub company'),
   shiftId: z.string().optional(),
-});
+})
+  .superRefine((v, ctx) => {
+    // Cross-field: joining after birth, and old enough on the joining date.
+    const problem = joiningDateProblem(v.dateOfBirth, v.joiningDate);
+    if (problem) ctx.addIssue({ code: 'custom', path: ['joiningDate'], message: problem });
+  });
 
 type FormData = z.infer<typeof schema>;
 
@@ -118,7 +123,7 @@ export function EmployeeFormDialog({ open, onClose, employee }: { open: boolean;
             <Input label="Last Name" required error={errors.lastName?.message} {...register('lastName')} />
             <Input label="Email" type="email" required error={errors.email?.message} {...register('email')} />
             <Input label="Phone" required error={errors.phone?.message} {...register('phone')} />
-            <Input label="Date of Birth" type="date" required error={errors.dateOfBirth?.message} {...register('dateOfBirth')} />
+            <Input label="Date of Birth" type="date" required error={errors.dateOfBirth?.message} {...register('dateOfBirth', { deps: ['joiningDate'] })} />
             <Input label="Address" required error={errors.address?.message} {...register('address')} className="sm:col-span-2" />
           </div>
         </div>
@@ -128,7 +133,7 @@ export function EmployeeFormDialog({ open, onClose, employee }: { open: boolean;
             <Select label="Department" required options={deptOptions} error={errors.department?.message} {...register('department')} />
             <Input label="Designation" required error={errors.designation?.message} {...register('designation')} />
             <Select label="Employee Type" required options={TYPE_OPTIONS} error={errors.employeeType?.message} {...register('employeeType')} />
-            <Input label="Joining Date" type="date" required error={errors.joiningDate?.message} {...register('joiningDate')} />
+            <Input label="Joining Date" type="date" required error={errors.joiningDate?.message} {...register('joiningDate', { deps: ['dateOfBirth'] })} />
             <Select label="Status" required options={[{ label: 'Active', value: 'ACTIVE' }, { label: 'Inactive', value: 'INACTIVE' }]} error={errors.status?.message} {...register('status')} />
             <Select label="Assigned Shift" options={shiftOptions} error={errors.shiftId?.message} {...register('shiftId')} />
           </div>

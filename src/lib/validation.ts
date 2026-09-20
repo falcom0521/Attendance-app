@@ -130,8 +130,25 @@ export function pastOrTodayDate(label: string) {
   return dateField(label).refine((v) => !isRealDate(v) || v <= today(), `${label} cannot be in the future`);
 }
 
+/** Minimum age at which someone can be employed. */
+export const MIN_EMPLOYEE_AGE = 17;
+
+/**
+ * Cross-field check for an employee: the joining date must fall after the date of birth, and the
+ * employee must be at least `minAge` on the joining date. Returns an error message, or `null` when fine
+ * (also `null` when either date is missing / not a real date — those have their own field errors).
+ */
+export function joiningDateProblem(dob: string, joining: string, minAge = MIN_EMPLOYEE_AGE): string | null {
+  if (!isRealDate(dob) || !isRealDate(joining)) return null;
+  if (joining <= dob) return 'Joining date must be after the date of birth';
+  if (differenceInYears(parseISO(joining), parseISO(dob)) < minAge) {
+    return `Employee must be at least ${minAge} years old on the joining date`;
+  }
+  return null;
+}
+
 /** Valid date of birth: not in the future and at least `minAge` years old. */
-export function birthDateField(minAge = 16) {
+export function birthDateField(minAge = MIN_EMPLOYEE_AGE) {
   return dateField('Date of birth')
     .refine((v) => !isRealDate(v) || v <= today(), 'Date of birth cannot be in the future')
     .refine(

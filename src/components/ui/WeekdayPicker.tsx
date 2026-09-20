@@ -31,7 +31,7 @@ export function WeekdayPicker({ value, onChange, label = 'Working Days', require
               aria-pressed={on}
               className={cn(
                 'px-3 py-1.5 rounded-lg text-sm font-medium border transition-colors',
-                on ? 'bg-brand-600 border-brand-600 text-white' : 'bg-white border-surface-300 text-surface-600 hover:bg-surface-50'
+                on ? 'bg-brand-600 border-brand-600 text-white' : 'bg-card border-surface-300 text-surface-600 hover:bg-surface-50'
               )}
             >
               {d.label}

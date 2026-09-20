@@ -26,7 +26,7 @@ export function Tabs({ tabs, activeTab, onChange, variant = 'underline', classNa
             className={cn(
               'flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-all duration-150',
               tab.id === activeTab
-                ? 'bg-white text-surface-900 shadow-soft-sm'
+                ? 'bg-card text-surface-900 shadow-soft-sm'
                 : 'text-surface-500 hover:text-surface-700'
             )}
           >

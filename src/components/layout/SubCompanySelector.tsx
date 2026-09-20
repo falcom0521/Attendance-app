@@ -39,7 +39,7 @@ export function SubCompanySelector({ companyId, companyName }: SubCompanySelecto
 
         {/* Dropdown */}
         <div className={cn(
-          'absolute left-0 top-full mt-1.5 w-56 bg-white border border-surface-200 rounded-xl shadow-soft-lg z-50',
+          'absolute left-0 top-full mt-1.5 w-56 bg-card border border-surface-200 rounded-xl shadow-soft-lg z-50',
           'hidden group-hover:block group-focus-within:block',
           'animate-fade-in'
         )}>

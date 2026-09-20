@@ -110,7 +110,7 @@ export function AttendanceSettingsCard() {
               {...register('overtimeThresholdMinutes', { valueAsNumber: true })}
             />
           </div>
-          <div className="space-y-4 pt-2 border-t border-surface-100">
+          <div className="flex flex-col items-start gap-4 pt-4 border-t border-surface-100">
             <Switch checked={overtimeEnabled} onChange={(v) => setValue('overtimeEnabled', v, { shouldDirty: true })} label="Enable Overtime Tracking" />
             <Switch checked={autoAbsent} onChange={(v) => setValue('autoAbsent', v, { shouldDirty: true })} label="Auto-mark absent after midnight" />
           </div>

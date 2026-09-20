@@ -150,7 +150,7 @@ function EmployeeCombobox({
         onClick={() => setOpen((v) => !v)}
         className={cn(
           'w-full flex items-center gap-2.5 px-3 py-2 rounded-lg border text-sm transition-all duration-150',
-          'bg-white text-left focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500',
+          'bg-card text-left focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500',
           open ? 'border-brand-500 ring-2 ring-brand-500' : error ? 'border-danger-400' : 'border-surface-300 hover:border-surface-400',
         )}
       >
@@ -188,7 +188,7 @@ function EmployeeCombobox({
 
       {/* Dropdown */}
       {open && (
-        <div className="absolute z-50 mt-1.5 w-full bg-white border border-surface-200 rounded-xl shadow-soft-lg overflow-hidden animate-slide-down">
+        <div className="absolute z-50 mt-1.5 w-full bg-card border border-surface-200 rounded-xl shadow-soft-lg overflow-hidden animate-slide-down">
           {/* Search */}
           <div className="p-2 border-b border-surface-100">
             <div className="relative">

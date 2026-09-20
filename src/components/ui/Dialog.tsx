@@ -60,14 +60,14 @@ export function Dialog({
       aria-labelledby={title ? 'dialog-title' : undefined}
     >
       <div
-        className="absolute inset-0 bg-surface-900/50 backdrop-blur-sm animate-fade-in"
+        className="absolute inset-0 bg-slate-900/50 backdrop-blur-sm animate-fade-in"
         onClick={onClose}
         aria-hidden="true"
       />
       <div
         ref={dialogRef}
         className={cn(
-          'relative w-full bg-white rounded-2xl shadow-soft-xl animate-slide-up',
+          'relative w-full bg-card rounded-2xl shadow-soft-xl animate-slide-up',
           'flex flex-col max-h-[90vh]',
           sizeClasses[size],
           className

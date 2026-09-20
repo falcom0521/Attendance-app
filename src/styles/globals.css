@@ -5,6 +5,127 @@
 @tailwind utilities;
 
 @layer base {
+  /* Colour tokens: light values in :root, dark values in .dark (toggled on <html>). */
+  :root {
+      --c-surface-0: 255 255 255;
+      --c-surface-50: 248 250 252;
+      --c-surface-100: 241 245 249;
+      --c-surface-200: 226 232 240;
+      --c-surface-300: 203 213 225;
+      --c-surface-400: 148 163 184;
+      --c-surface-500: 100 116 139;
+      --c-surface-600: 71 85 105;
+      --c-surface-700: 51 65 85;
+      --c-surface-800: 30 41 59;
+      --c-surface-900: 15 23 42;
+      --c-surface-950: 2 6 23;
+      --c-brand-50: 239 246 255;
+      --c-brand-100: 219 234 254;
+      --c-brand-200: 191 219 254;
+      --c-brand-300: 147 197 253;
+      --c-brand-400: 96 165 250;
+      --c-brand-500: 59 130 246;
+      --c-brand-600: 37 99 235;
+      --c-brand-700: 29 78 216;
+      --c-brand-800: 30 64 175;
+      --c-brand-900: 30 58 138;
+      --c-brand-950: 23 37 84;
+      --c-success-50: 240 253 244;
+      --c-success-100: 220 252 231;
+      --c-success-200: 187 247 208;
+      --c-success-500: 34 197 94;
+      --c-success-600: 22 163 74;
+      --c-success-700: 21 128 61;
+      --c-success-800: 22 101 52;
+      --c-warning-50: 255 251 235;
+      --c-warning-100: 254 243 199;
+      --c-warning-200: 253 230 138;
+      --c-warning-500: 245 158 11;
+      --c-warning-600: 217 119 6;
+      --c-warning-700: 180 83 9;
+      --c-warning-800: 146 64 14;
+      --c-danger-50: 254 242 242;
+      --c-danger-100: 254 226 226;
+      --c-danger-200: 254 202 202;
+      --c-danger-400: 248 113 113;
+      --c-danger-500: 239 68 68;
+      --c-danger-600: 220 38 38;
+      --c-danger-700: 185 28 28;
+      --c-danger-800: 153 27 27;
+      --c-info-50: 239 246 255;
+      --c-info-100: 219 234 254;
+      --c-info-200: 191 219 254;
+      --c-info-500: 59 130 246;
+      --c-info-600: 37 99 235;
+      --c-info-700: 29 78 216;
+      --c-purple-50: 250 245 255;
+      --c-purple-100: 243 232 255;
+      --c-purple-200: 233 213 255;
+      --c-purple-600: 147 51 234;
+      --c-purple-700: 126 34 206;
+      --c-orange-50: 255 247 237;
+      --c-orange-100: 255 237 213;
+      --c-orange-200: 254 215 170;
+      --c-orange-600: 234 88 12;
+      --c-orange-700: 194 65 12;
+      --c-orange-800: 154 52 18;
+      --c-cyan-50: 236 254 255;
+      --c-cyan-100: 207 250 254;
+      --c-cyan-600: 8 145 178;
+      --c-cyan-700: 14 116 144;
+      --c-violet-50: 245 243 255;
+      --c-violet-600: 124 58 237;
+      --c-pink-100: 252 231 243;
+      --c-pink-700: 190 24 93;
+      --c-indigo-50: 238 242 255;
+      --c-indigo-600: 79 70 229;
+      --c-card: 255 255 255;
+      color-scheme: light;
+    }
+  
+    .dark {
+      --c-surface-0: 17 26 46;
+      --c-surface-50: 10 16 32;
+      --c-surface-100: 23 34 56;
+      --c-surface-200: 34 48 74;
+      --c-surface-300: 51 68 99;
+      --c-surface-400: 124 138 165;
+      --c-surface-500: 151 164 188;
+      --c-surface-600: 182 192 211;
+      --c-surface-700: 208 215 228;
+      --c-surface-800: 226 231 240;
+      --c-surface-900: 241 245 249;
+      --c-surface-950: 248 250 252;
+      --c-brand-50: 23 37 84;
+      --c-brand-100: 30 58 138;
+      --c-brand-200: 30 64 175;
+      --c-success-50: 5 46 22;
+      --c-success-100: 20 83 45;
+      --c-success-200: 22 101 52;
+      --c-warning-50: 69 26 3;
+      --c-warning-100: 120 53 15;
+      --c-warning-200: 146 64 14;
+      --c-danger-50: 69 10 10;
+      --c-danger-100: 127 29 29;
+      --c-danger-200: 153 27 27;
+      --c-info-50: 23 37 84;
+      --c-info-100: 30 58 138;
+      --c-info-200: 30 64 175;
+      --c-purple-50: 59 7 100;
+      --c-purple-100: 88 28 135;
+      --c-purple-200: 107 33 168;
+      --c-orange-50: 67 20 7;
+      --c-orange-100: 124 45 18;
+      --c-orange-200: 154 52 18;
+      --c-cyan-50: 8 51 68;
+      --c-cyan-100: 22 78 99;
+      --c-violet-50: 46 16 101;
+      --c-pink-100: 131 24 67;
+      --c-indigo-50: 30 27 75;
+      --c-card: 17 26 46;
+      color-scheme: dark;
+    }
+
   :root {
     --sidebar-width: 260px;
     --sidebar-collapsed-width: 68px;
@@ -43,7 +164,7 @@
   }
 
   .card {
-    @apply bg-white rounded-xl border border-surface-200 shadow-soft-sm;
+    @apply bg-card rounded-xl border border-surface-200 shadow-soft-sm;
   }
 
   .card-header {
@@ -79,7 +200,7 @@
   }
 
   .form-input {
-    @apply w-full px-3 py-2 text-sm border border-surface-300 rounded-lg bg-white text-surface-900 placeholder-surface-400 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500;
+    @apply w-full px-3 py-2 text-sm border border-surface-300 rounded-lg bg-card text-surface-900 placeholder-surface-400 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-brand-500;
   }
 
   .form-input-error {
@@ -126,5 +247,95 @@
   .no-scrollbar {
     -ms-overflow-style: none;
     scrollbar-width: none;
+  }
+}
+
+/* ── Dark mode adjustments ─────────────────────────────────────────────────
+   The 600–800 shades stay the same in both themes (they are used as button fills with white text),
+   so where they are used as *text* colour they need a lighter shade on dark backgrounds. */
+@layer utilities {
+  .dark .text-brand-600,
+  .dark .hover\:text-brand-600:hover,
+  .dark .group:hover .group-hover\:text-brand-600 { color: rgb(96 165 250); }
+  .dark .text-brand-700,
+  .dark .hover\:text-brand-700:hover,
+  .dark .group:hover .group-hover\:text-brand-700 { color: rgb(147 197 253); }
+  .dark .text-brand-800,
+  .dark .hover\:text-brand-800:hover,
+  .dark .group:hover .group-hover\:text-brand-800 { color: rgb(191 219 254); }
+  .dark .text-success-600,
+  .dark .hover\:text-success-600:hover,
+  .dark .group:hover .group-hover\:text-success-600 { color: rgb(74 222 128); }
+  .dark .text-success-700,
+  .dark .hover\:text-success-700:hover,
+  .dark .group:hover .group-hover\:text-success-700 { color: rgb(134 239 172); }
+  .dark .text-success-800,
+  .dark .hover\:text-success-800:hover,
+  .dark .group:hover .group-hover\:text-success-800 { color: rgb(187 247 208); }
+  .dark .text-warning-600,
+  .dark .hover\:text-warning-600:hover,
+  .dark .group:hover .group-hover\:text-warning-600 { color: rgb(251 191 36); }
+  .dark .text-warning-700,
+  .dark .hover\:text-warning-700:hover,
+  .dark .group:hover .group-hover\:text-warning-700 { color: rgb(252 211 77); }
+  .dark .text-warning-800,
+  .dark .hover\:text-warning-800:hover,
+  .dark .group:hover .group-hover\:text-warning-800 { color: rgb(253 230 138); }
+  .dark .text-danger-600,
+  .dark .hover\:text-danger-600:hover,
+  .dark .group:hover .group-hover\:text-danger-600 { color: rgb(248 113 113); }
+  .dark .text-danger-700,
+  .dark .hover\:text-danger-700:hover,
+  .dark .group:hover .group-hover\:text-danger-700 { color: rgb(252 165 165); }
+  .dark .text-danger-800,
+  .dark .hover\:text-danger-800:hover,
+  .dark .group:hover .group-hover\:text-danger-800 { color: rgb(254 202 202); }
+  .dark .text-info-600,
+  .dark .hover\:text-info-600:hover,
+  .dark .group:hover .group-hover\:text-info-600 { color: rgb(96 165 250); }
+  .dark .text-info-700,
+  .dark .hover\:text-info-700:hover,
+  .dark .group:hover .group-hover\:text-info-700 { color: rgb(147 197 253); }
+  .dark .text-purple-600,
+  .dark .hover\:text-purple-600:hover,
+  .dark .group:hover .group-hover\:text-purple-600 { color: rgb(192 132 252); }
+  .dark .text-purple-700,
+  .dark .hover\:text-purple-700:hover,
+  .dark .group:hover .group-hover\:text-purple-700 { color: rgb(216 180 254); }
+  .dark .text-orange-600,
+  .dark .hover\:text-orange-600:hover,
+  .dark .group:hover .group-hover\:text-orange-600 { color: rgb(251 146 60); }
+  .dark .text-orange-700,
+  .dark .hover\:text-orange-700:hover,
+  .dark .group:hover .group-hover\:text-orange-700 { color: rgb(253 186 116); }
+  .dark .text-orange-800,
+  .dark .hover\:text-orange-800:hover,
+  .dark .group:hover .group-hover\:text-orange-800 { color: rgb(254 215 170); }
+  .dark .text-cyan-600,
+  .dark .hover\:text-cyan-600:hover,
+  .dark .group:hover .group-hover\:text-cyan-600 { color: rgb(34 211 238); }
+  .dark .text-cyan-700,
+  .dark .hover\:text-cyan-700:hover,
+  .dark .group:hover .group-hover\:text-cyan-700 { color: rgb(103 232 249); }
+  .dark .text-violet-600,
+  .dark .hover\:text-violet-600:hover,
+  .dark .group:hover .group-hover\:text-violet-600 { color: rgb(167 139 250); }
+  .dark .text-pink-700,
+  .dark .hover\:text-pink-700:hover,
+  .dark .group:hover .group-hover\:text-pink-700 { color: rgb(249 168 212); }
+  .dark .text-indigo-600,
+  .dark .hover\:text-indigo-600:hover,
+  .dark .group:hover .group-hover\:text-indigo-600 { color: rgb(129 140 248); }
+
+  /* Row / menu hover should lighten on dark surfaces rather than darken. */
+  .dark .hover\:bg-surface-50:hover,
+  .dark .table-tr:hover,
+  .dark .sidebar-link:hover {
+    background-color: rgb(var(--c-surface-100));
+  }
+
+  /* Focus rings leave a gap in the card colour, not white. */
+  .dark *, .dark ::before, .dark ::after {
+    --tw-ring-offset-color: rgb(var(--c-card));
   }
 }

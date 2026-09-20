@@ -1,4 +1,5 @@
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend } from 'recharts';
+import { useChartTheme } from './useChartTheme';
 
 interface DonutDataPoint {
   name: string;
@@ -15,12 +16,14 @@ interface DonutChartProps {
 
 export function DonutChart({ data, height = 260, innerRadius = 55, outerRadius = 90 }: DonutChartProps) {
   const total = data.reduce((sum, d) => sum + d.value, 0);
+  const c = useChartTheme();
 
   return (
     <ResponsiveContainer width="100%" height={height}>
       <PieChart>
         <Pie
           data={data}
+          stroke={c.tooltipBg}
           cx="50%"
           cy="50%"
           innerRadius={innerRadius}
@@ -34,8 +37,9 @@ export function DonutChart({ data, height = 260, innerRadius = 55, outerRadius =
         </Pie>
         <Tooltip
           contentStyle={{
-            background: '#fff',
-            border: '1px solid #e2e8f0',
+            background: c.tooltipBg,
+            color: c.muted,
+            border: `1px solid ${c.tooltipBorder}`,
             borderRadius: '10px',
             fontSize: '12px',
           }}
@@ -46,7 +50,7 @@ export function DonutChart({ data, height = 260, innerRadius = 55, outerRadius =
         />
         <Legend
           wrapperStyle={{ fontSize: '12px' }}
-          formatter={(value) => <span style={{ color: '#64748b' }}>{value}</span>}
+          formatter={(value) => <span style={{ color: c.muted }}>{value}</span>}
         />
       </PieChart>
     </ResponsiveContainer>

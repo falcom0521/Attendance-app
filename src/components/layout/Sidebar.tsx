@@ -146,7 +146,7 @@ export function Sidebar({ navItems, brandName = 'AttendanceIQ', roleName }: Side
       {/* Desktop sidebar */}
       <aside
         className={cn(
-          'hidden lg:flex flex-col bg-white border-r border-surface-200 flex-shrink-0 transition-all duration-200',
+          'hidden lg:flex flex-col bg-card border-r border-surface-200 flex-shrink-0 transition-all duration-200',
           sidebarCollapsed ? 'w-[68px]' : 'w-[260px]'
         )}
         aria-label="Sidebar"
@@ -158,10 +158,10 @@ export function Sidebar({ navItems, brandName = 'AttendanceIQ', roleName }: Side
       {mobileSidebarOpen && (
         <div className="lg:hidden fixed inset-0 z-50 flex">
           <div
-            className="absolute inset-0 bg-surface-900/50 backdrop-blur-sm"
+            className="absolute inset-0 bg-slate-900/50 backdrop-blur-sm"
             onClick={() => setMobileSidebarOpen(false)}
           />
-          <aside className="relative flex flex-col w-[260px] bg-white shadow-soft-xl animate-slide-in-left">
+          <aside className="relative flex flex-col w-[260px] bg-card shadow-soft-xl animate-slide-in-left">
             <button
               onClick={() => setMobileSidebarOpen(false)}
               className="absolute top-4 right-4 p-1.5 rounded-lg text-surface-400 hover:text-surface-600 hover:bg-surface-100"

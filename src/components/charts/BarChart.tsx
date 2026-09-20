@@ -8,6 +8,7 @@ import {
   Tooltip,
   Legend,
 } from 'recharts';
+import { useChartTheme } from './useChartTheme';
 
 interface BarDataPoint {
   [key: string]: string | number;
@@ -29,30 +30,32 @@ interface BarChartProps {
 }
 
 export function BarChart({ data, bars, xAxisKey, height = 280 }: BarChartProps) {
+  const c = useChartTheme();
   return (
     <ResponsiveContainer width="100%" height={height}>
       <RechartsBarChart data={data} margin={{ top: 5, right: 10, left: -20, bottom: 5 }} barSize={12}>
-        <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
+        <CartesianGrid strokeDasharray="3 3" stroke={c.grid} vertical={false} />
         <XAxis
           dataKey={xAxisKey}
-          tick={{ fontSize: 11, fill: '#94a3b8' }}
+          tick={{ fontSize: 11, fill: c.axis }}
           axisLine={false}
           tickLine={false}
         />
-        <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
+        <YAxis tick={{ fontSize: 11, fill: c.axis }} axisLine={false} tickLine={false} />
         <Tooltip
           contentStyle={{
-            background: '#fff',
-            border: '1px solid #e2e8f0',
+            background: c.tooltipBg,
+            color: c.muted,
+            border: `1px solid ${c.tooltipBorder}`,
             borderRadius: '10px',
             boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.07)',
             fontSize: '12px',
           }}
-          cursor={{ fill: '#f8fafc' }}
+          cursor={{ fill: c.cursorFill }}
         />
         <Legend
           wrapperStyle={{ fontSize: '12px', paddingTop: '16px' }}
-          formatter={(value) => <span style={{ color: '#64748b' }}>{value}</span>}
+          formatter={(value) => <span style={{ color: c.muted }}>{value}</span>}
         />
         {bars.map((bar) => (
           <Bar

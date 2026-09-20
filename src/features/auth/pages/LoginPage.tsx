@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { env } from '@/config/environment';
 import { cn } from '@/lib/utils';
+import { ThemeToggle } from '@/components/ui/ThemeToggle';
 
 // Demo accounts are kept for the mock phase. Remove this block (and the panel below) when real auth is live.
 const DEMO_ACCOUNTS = [
@@ -79,7 +80,7 @@ export function LoginPage() {
     <div className="min-h-screen lg:grid lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)]">
       {/* ── Brand panel (desktop) ───────────────────────────────────────── */}
       <aside
-        className="relative hidden lg:flex flex-col justify-between overflow-hidden bg-surface-950 px-14 py-12 text-white"
+        className="relative hidden lg:flex flex-col justify-between overflow-hidden bg-[#020617] px-14 py-12 text-white"
         aria-hidden="true"
       >
         {/* Decorative background: soft brand glows over a faint grid */}
@@ -114,7 +115,7 @@ export function LoginPage() {
             Every punch, every branch,
             <span className="text-brand-300"> accounted for.</span>
           </h1>
-          <p className="mt-5 max-w-md text-base leading-relaxed text-surface-300">
+          <p className="mt-5 max-w-md text-base leading-relaxed text-slate-300">
             Track attendance from your biometric devices, manage shifts and holidays, and keep payroll inputs accurate — from one dashboard.
           </p>
 
@@ -122,24 +123,25 @@ export function LoginPage() {
             {HIGHLIGHTS.map(({ icon: Icon, title, text }) => (
               <li key={title} className="flex gap-3.5">
                 <span className="mt-0.5 flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-white/10 ring-1 ring-inset ring-white/15">
-                  <Icon className="h-[18px] w-[18px] text-brand-200" />
+                  <Icon className="h-[18px] w-[18px] text-blue-200" />
                 </span>
                 <span>
                   <span className="block text-sm font-semibold text-white">{title}</span>
-                  <span className="mt-0.5 block text-sm leading-snug text-surface-400">{text}</span>
+                  <span className="mt-0.5 block text-sm leading-snug text-slate-400">{text}</span>
                 </span>
               </li>
             ))}
           </ul>
         </div>
 
-        <p className="relative text-xs text-surface-500">
+        <p className="relative text-xs text-slate-500">
           © {new Date().getFullYear()} {env.appName} · v{env.appVersion}
         </p>
       </aside>
 
       {/* ── Sign-in panel ───────────────────────────────────────────────── */}
-      <main className="flex min-h-screen items-center justify-center bg-white px-5 py-10 sm:px-10 lg:min-h-0">
+      <main className="relative flex min-h-screen items-center justify-center bg-card px-5 py-10 sm:px-10 lg:min-h-0">
+        <ThemeToggle className="absolute right-4 top-4 sm:right-6 sm:top-6" />
         <div className="w-full max-w-[26rem]">
           {/* Brand (mobile / tablet) */}
           <div className="mb-10 flex items-center gap-3 lg:hidden">
@@ -223,7 +225,7 @@ export function LoginPage() {
                       'focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-1',
                       selected
                         ? 'border-brand-500 bg-brand-50 ring-1 ring-brand-500'
-                        : 'border-surface-200 bg-white hover:border-surface-300 hover:bg-surface-50'
+                        : 'border-surface-200 bg-card hover:border-surface-300 hover:bg-surface-50'
                     )}
                   >
                     <span

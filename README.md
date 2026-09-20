@@ -33,6 +33,18 @@ AttendanceIQ manages employee attendance from physical biometric punch devices. 
 
 ---
 
+## Dark Mode
+
+A sun / moon button in the top bar (and on the login page) switches between light and dark mode.
+
+- The first visit follows your operating-system setting; once you choose a theme it is remembered (`localStorage`, key `attendanceiq-theme`)
+- The theme is applied before the app renders, so there is no flash of the wrong theme
+- Colours are CSS variables (`src/styles/globals.css`) consumed by the Tailwind palette, so components need no `dark:` classes. Use the existing tokens (`bg-card`, `bg-surface-*`, `text-surface-*`, `brand-*`, `success-*`…) and both themes work automatically
+- Use `bg-card` (not `bg-white`) for panels and dropdowns. For a surface that must stay dark in both themes use an untokenised colour such as `bg-slate-900` or `bg-[#020617]`
+- Charts read their neutral colours from `useChartTheme()` (`src/components/charts/useChartTheme.ts`)
+
+---
+
 ## Getting Started
 
 ### Prerequisites
