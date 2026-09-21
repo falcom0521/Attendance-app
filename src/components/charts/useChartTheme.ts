@@ -9,14 +9,14 @@ export function useChartTheme() {
   const dark = useThemeStore((s) => s.theme === 'dark');
   return dark
     ? {
-        grid: '#22304a',
-        axis: '#7c8aa5',
-        muted: '#97a4bc',
-        tooltipBg: '#111a2e',
-        tooltipBorder: '#22304a',
-        cursorLine: '#334463',
-        cursorFill: '#172238',
-        dotFill: '#111a2e',
+        grid: '#1c2334',
+        axis: '#707c94',
+        muted: '#8c98af',
+        tooltipBg: '#0b0f19',
+        tooltipBorder: '#1c2334',
+        cursorLine: '#2a344a',
+        cursorFill: '#111623',
+        dotFill: '#0b0f19',
       }
     : {
         grid: '#f1f5f9',

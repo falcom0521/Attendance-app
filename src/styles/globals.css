@@ -84,45 +84,45 @@
     }
   
     .dark {
-      --c-surface-0: 17 26 46;
-      --c-surface-50: 10 16 32;
-      --c-surface-100: 23 34 56;
-      --c-surface-200: 34 48 74;
-      --c-surface-300: 51 68 99;
-      --c-surface-400: 124 138 165;
-      --c-surface-500: 151 164 188;
-      --c-surface-600: 182 192 211;
-      --c-surface-700: 208 215 228;
-      --c-surface-800: 226 231 240;
+      --c-surface-0: 11 15 25;
+      --c-surface-50: 5 7 13;
+      --c-surface-100: 17 22 35;
+      --c-surface-200: 28 35 52;
+      --c-surface-300: 42 52 74;
+      --c-surface-400: 112 124 148;
+      --c-surface-500: 140 152 175;
+      --c-surface-600: 172 182 201;
+      --c-surface-700: 203 211 224;
+      --c-surface-800: 225 230 239;
       --c-surface-900: 241 245 249;
       --c-surface-950: 248 250 252;
-      --c-brand-50: 23 37 84;
-      --c-brand-100: 30 58 138;
-      --c-brand-200: 30 64 175;
-      --c-success-50: 5 46 22;
-      --c-success-100: 20 83 45;
-      --c-success-200: 22 101 52;
-      --c-warning-50: 69 26 3;
-      --c-warning-100: 120 53 15;
-      --c-warning-200: 146 64 14;
-      --c-danger-50: 69 10 10;
-      --c-danger-100: 127 29 29;
-      --c-danger-200: 153 27 27;
-      --c-info-50: 23 37 84;
-      --c-info-100: 30 58 138;
-      --c-info-200: 30 64 175;
-      --c-purple-50: 59 7 100;
-      --c-purple-100: 88 28 135;
-      --c-purple-200: 107 33 168;
-      --c-orange-50: 67 20 7;
-      --c-orange-100: 124 45 18;
-      --c-orange-200: 154 52 18;
-      --c-cyan-50: 8 51 68;
-      --c-cyan-100: 22 78 99;
-      --c-violet-50: 46 16 101;
-      --c-pink-100: 131 24 67;
-      --c-indigo-50: 30 27 75;
-      --c-card: 17 26 46;
+      --c-brand-50: 14 22 48;
+      --c-brand-100: 20 34 84;
+      --c-brand-200: 26 48 120;
+      --c-success-50: 3 27 14;
+      --c-success-100: 10 50 28;
+      --c-success-200: 16 70 40;
+      --c-warning-50: 40 16 2;
+      --c-warning-100: 74 33 8;
+      --c-warning-200: 100 44 10;
+      --c-danger-50: 42 6 6;
+      --c-danger-100: 82 16 16;
+      --c-danger-200: 112 20 20;
+      --c-info-50: 14 22 48;
+      --c-info-100: 20 34 84;
+      --c-info-200: 26 48 120;
+      --c-purple-50: 31 5 64;
+      --c-purple-100: 54 15 94;
+      --c-purple-200: 71 24 122;
+      --c-orange-50: 42 12 3;
+      --c-orange-100: 77 26 8;
+      --c-orange-200: 103 33 12;
+      --c-cyan-50: 4 35 47;
+      --c-cyan-100: 11 58 75;
+      --c-violet-50: 28 10 69;
+      --c-pink-100: 86 15 44;
+      --c-indigo-50: 20 18 50;
+      --c-card: 11 15 25;
       color-scheme: dark;
     }
 
@@ -339,3 +339,33 @@
     --tw-ring-offset-color: rgb(var(--c-card));
   }
 }
+
+/* ── Login page extras ─────────────────────────────────────────────────── */
+@layer components {
+  /* A soft light sweep across the primary button on hover. */
+  .cta-shimmer {
+    position: relative;
+    overflow: hidden;
+  }
+  .cta-shimmer::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(105deg, transparent 35%, rgb(255 255 255 / 0.28) 50%, transparent 65%);
+    transform: translateX(-120%);
+    transition: transform 0.7s ease;
+    pointer-events: none;
+  }
+  .cta-shimmer:hover::after {
+    transform: translateX(120%);
+  }
+}
+
+/* People who ask their OS for reduced motion get a still page. */
+@media (prefers-reduced-motion: reduce) {
+  .animate-drift-a, .animate-drift-b, .animate-drift-c, .animate-fade-up {
+    animation: none !important;
+  }
+  .cta-shimmer::after { transition: none; }
+}
+

@@ -158,6 +158,11 @@ export default {
         'slide-down': 'slideDown 0.2s ease-out',
         'slide-in-left': 'slideInLeft 0.25s ease-out',
         'spin-slow': 'spin 3s linear infinite',
+        // Login page ambience
+        'drift-a': 'driftA 22s ease-in-out infinite',
+        'drift-b': 'driftB 28s ease-in-out infinite',
+        'drift-c': 'driftC 34s ease-in-out infinite',
+        'fade-up': 'fadeUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) both',
       },
       keyframes: {
         fadeIn: {
@@ -170,6 +175,22 @@ export default {
         },
         slideDown: {
           '0%': { opacity: '0', transform: 'translateY(-8px)' },
+          '100%': { opacity: '1', transform: 'translateY(0)' },
+        },
+        driftA: {
+          '0%, 100%': { transform: 'translate3d(0, 0, 0) scale(1)' },
+          '50%': { transform: 'translate3d(60px, 40px, 0) scale(1.12)' },
+        },
+        driftB: {
+          '0%, 100%': { transform: 'translate3d(0, 0, 0) scale(1.05)' },
+          '50%': { transform: 'translate3d(-70px, -30px, 0) scale(0.92)' },
+        },
+        driftC: {
+          '0%, 100%': { transform: 'translate3d(0, 0, 0) scale(1)' },
+          '50%': { transform: 'translate3d(40px, -60px, 0) scale(1.1)' },
+        },
+        fadeUp: {
+          '0%': { opacity: '0', transform: 'translateY(18px)' },
           '100%': { opacity: '1', transform: 'translateY(0)' },
         },
         slideInLeft: {
