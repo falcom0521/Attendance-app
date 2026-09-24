@@ -61,6 +61,9 @@ export interface DevicePunchLogFilters {
   search?: string;
   page?: number;
   pageSize?: number;
+  /** Field to sort by; defaults to `punchTime` descending (newest first) when omitted. */
+  sortBy?: string;
+  sortDir?: 'asc' | 'desc';
 }
 
 export interface DeallocateDevicePayload {

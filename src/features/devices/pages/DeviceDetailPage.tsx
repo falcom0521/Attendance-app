@@ -19,6 +19,7 @@ import { useDevice, useDeviceAllocations, useDevicePunchLogs, useDeviceStats } f
 import { DeviceFormDialog } from '../components/DeviceFormDialog';
 import { AllocateDeviceDialog } from '../components/AllocateDeviceDialog';
 import { DeallocateDeviceDialog } from '../components/DeallocateDeviceDialog';
+import type { SortDir } from '@/lib/sort';
 
 const TABS = [
   { id: 'overview', label: 'Overview' },
@@ -55,6 +56,8 @@ export function DeviceDetailPage() {
   const [to, setTo] = useState(todayISO());
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
+  const [punchSortKey, setPunchSortKey] = useState<string | null>(null);
+  const [punchSortDir, setPunchSortDir] = useState<SortDir | null>(null);
 
   const rangeError = from && to && from > to ? 'From date must be on or before the To date' : '';
   const { data: device, isLoading, error, refetch } = useDevice(deviceId);
@@ -66,6 +69,8 @@ export function DeviceDetailPage() {
     search: search || undefined,
     page,
     pageSize: 15,
+    sortBy: punchSortKey ?? undefined,
+    sortDir: punchSortDir ?? undefined,
   });
 
   if (isLoading) {
@@ -92,7 +97,7 @@ export function DeviceDetailPage() {
 
   const allocationColumns: Column<DeviceAllocation>[] = [
     {
-      key: 'target', header: 'Allocated To',
+      key: 'subCompanyName', header: 'Allocated To', sortable: true, sortValue: (a) => a.subCompanyName,
       accessor: (a) => (
         <div>
           <p className="font-medium text-surface-900">{a.subCompanyName}</p>
@@ -101,7 +106,7 @@ export function DeviceDetailPage() {
       ),
     },
     {
-      key: 'allocated', header: 'Allocated',
+      key: 'allocatedAt', header: 'Allocated', sortable: true, sortValue: (a) => a.allocatedAt,
       accessor: (a) => (
         <div>
           <p className="text-sm">{formatDateTime(a.allocatedAt)}</p>
@@ -110,7 +115,7 @@ export function DeviceDetailPage() {
       ),
     },
     {
-      key: 'deallocated', header: 'Ended',
+      key: 'deallocatedAt', header: 'Ended', sortable: true, sortValue: (a) => a.deallocatedAt,
       accessor: (a) => a.deallocatedAt ? (
         <div>
           <p className="text-sm">{formatDateTime(a.deallocatedAt)}</p>
@@ -118,14 +123,14 @@ export function DeviceDetailPage() {
         </div>
       ) : <span className="text-surface-300">—</span>,
     },
-    { key: 'status', header: 'Status', width: '100px', accessor: (a) => <Badge variant={a.isActive ? 'success' : 'surface'} size="sm">{a.isActive ? 'Active' : 'Closed'}</Badge> },
+    { key: 'status', header: 'Status', sortable: true, sortValue: (a) => (a.isActive ? 'Active' : 'Closed'), width: '100px', accessor: (a) => <Badge variant={a.isActive ? 'success' : 'surface'} size="sm">{a.isActive ? 'Active' : 'Closed'}</Badge> },
     { key: 'notes', header: 'Notes', accessor: (a) => <span className="text-sm text-surface-600">{a.deallocationReason ?? a.notes ?? '—'}</span> },
   ];
 
   const punchColumns: Column<DevicePunchLog>[] = [
-    { key: 'time', header: 'Time', width: '190px', accessor: (p) => <span className="font-mono text-xs">{formatDate(p.punchTime, 'dd MMM yyyy')} · {formatTime(p.punchTime)}</span> },
+    { key: 'punchTime', header: 'Time', sortable: true, sortValue: (p) => p.punchTime, width: '190px', accessor: (p) => <span className="font-mono text-xs">{formatDate(p.punchTime, 'dd MMM yyyy')} · {formatTime(p.punchTime)}</span> },
     {
-      key: 'employee', header: 'Employee',
+      key: 'employeeName', header: 'Employee', sortable: true, sortValue: (p) => p.employeeName,
       accessor: (p) => (
         <div>
           <p className="font-medium text-surface-900">{p.employeeName}</p>
@@ -133,7 +138,7 @@ export function DeviceDetailPage() {
         </div>
       ),
     },
-    { key: 'type', header: 'Type', width: '100px', accessor: (p) => <Badge variant={p.punchType === 'IN' ? 'success' : 'danger'} size="sm">{p.punchType}</Badge> },
+    { key: 'punchType', header: 'Type', sortable: true, sortValue: (p) => p.punchType, width: '100px', accessor: (p) => <Badge variant={p.punchType === 'IN' ? 'success' : 'danger'} size="sm">{p.punchType}</Badge> },
   ];
 
   return (
@@ -245,6 +250,9 @@ export function DeviceDetailPage() {
             searchValue={search}
             onSearchChange={(v) => { setSearch(v); setPage(1); }}
             searchPlaceholder="Search employee..."
+            sortKey={punchSortKey}
+            sortDir={punchSortDir}
+            onSortChange={(key, dir) => { setPunchSortKey(key); setPunchSortDir(dir); setPage(1); }}
             pagination={logs ? { page, totalPages: logs.totalPages, total: logs.total, pageSize: logs.pageSize, onPageChange: setPage } : undefined}
             emptyState={{ title: 'No punches in this range', description: 'Try widening the date range.', icon: <Fingerprint className="h-8 w-8" /> }}
           />

@@ -24,6 +24,9 @@ import { reportService } from '@/services/mock';
 import { useToast } from '@/components/feedback/ToastContext';
 import { summarizeMonthlyAttendance } from '@/utils/attendance';
 import type { ExportFormat } from '@/types/report';
+import type { AttendanceRecord } from '@/types/attendance';
+import { useSort } from '@/hooks/useSort';
+import { SortableTh } from '@/components/ui/SortableTh';
 
 const PAGE_SIZE = 15;
 
@@ -54,12 +57,17 @@ export function MonthlyAttendancePage() {
     employeeId: employeeId || undefined,
   });
 
-  // ── Pagination ──────────────────────────────────────────────────
+  // ── Sorting & pagination ────────────────────────────────────────
+  const { sortKey, sortDir, onSort, sortedData: sortedRecords } = useSort<AttendanceRecord>(
+    records,
+    (r, key) => r[key as keyof AttendanceRecord]
+  );
   const totalPages = Math.ceil(records.length / PAGE_SIZE);
   const pagedRecords = useMemo(
-    () => records.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE),
-    [records, page]
+    () => sortedRecords.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE),
+    [sortedRecords, page]
   );
+  function handleSort(key: string) { onSort(key); setPage(1); }
 
   // Reset to page 1 whenever filters change
   function changeMonth(v: number) { setMonth(v); setPage(1); }
@@ -235,16 +243,16 @@ export function MonthlyAttendancePage() {
                 <table className="w-full text-sm">
                   <thead>
                     <tr>
-                      <th className="table-th">Date</th>
-                      <th className="table-th">Employee</th>
-                      <th className="table-th">Shift</th>
-                      <th className="table-th">Punch In</th>
-                      <th className="table-th">Punch Out</th>
-                      <th className="table-th">Working</th>
-                      <th className="table-th">Late</th>
-                      <th className="table-th">Early Out</th>
-                      <th className="table-th">OT</th>
-                      <th className="table-th">Status</th>
+                      <SortableTh label="Date" sortKey="date" activeKey={sortKey} dir={sortDir} onSort={handleSort} />
+                      <SortableTh label="Employee" sortKey="employeeName" activeKey={sortKey} dir={sortDir} onSort={handleSort} />
+                      <SortableTh label="Shift" sortKey="shiftName" activeKey={sortKey} dir={sortDir} onSort={handleSort} />
+                      <SortableTh label="Punch In" sortKey="firstPunchIn" activeKey={sortKey} dir={sortDir} onSort={handleSort} />
+                      <SortableTh label="Punch Out" sortKey="lastPunchOut" activeKey={sortKey} dir={sortDir} onSort={handleSort} />
+                      <SortableTh label="Working" sortKey="workingMinutes" activeKey={sortKey} dir={sortDir} onSort={handleSort} />
+                      <SortableTh label="Late" sortKey="lateMinutes" activeKey={sortKey} dir={sortDir} onSort={handleSort} />
+                      <SortableTh label="Early Out" sortKey="earlyOutMinutes" activeKey={sortKey} dir={sortDir} onSort={handleSort} />
+                      <SortableTh label="OT" sortKey="overtimeMinutes" activeKey={sortKey} dir={sortDir} onSort={handleSort} />
+                      <SortableTh label="Status" sortKey="status" activeKey={sortKey} dir={sortDir} onSort={handleSort} />
                     </tr>
                   </thead>
                   <tbody>

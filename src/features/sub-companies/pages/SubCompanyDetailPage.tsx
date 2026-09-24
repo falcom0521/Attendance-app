@@ -31,6 +31,7 @@ import { hasPermission } from '@/config/permissions';
 import type { Employee } from '@/types/employee';
 import type { Device } from '@/types/device';
 import type { AppUser } from '@/types/user';
+import { compareForSort, type SortDir } from '@/lib/sort';
 
 const ALL_DAYS = [
   ['MONDAY', 'Mon'], ['TUESDAY', 'Tue'], ['WEDNESDAY', 'Wed'], ['THURSDAY', 'Thu'],
@@ -54,6 +55,8 @@ export function SubCompanyDetailPage() {
   const [editUser, setEditUser] = useState<AppUser | null>(null);
   const [empPage, setEmpPage] = useState(1);
   const [empSearch, setEmpSearch] = useState('');
+  const [empSortKey, setEmpSortKey] = useState<string | null>(null);
+  const [empSortDir, setEmpSortDir] = useState<SortDir | null>(null);
 
   const { data: sub, isLoading, error, refetch } = useSubCompany(subCompanyId);
   const { data: empData, isLoading: loadingEmp } = useEmployees({ subCompanyId, page: 1, pageSize: 200 });
@@ -67,10 +70,13 @@ export function SubCompanyDetailPage() {
   const employees = useMemo(() => empData?.data ?? [], [empData]);
   const filteredEmployees = useMemo(() => {
     const q = empSearch.trim().toLowerCase();
-    return q
+    const matched = q
       ? employees.filter((e) => `${e.fullName} ${e.employeeCode} ${e.department} ${e.designation}`.toLowerCase().includes(q))
       : employees;
-  }, [employees, empSearch]);
+    if (!empSortKey || !empSortDir) return matched;
+    const getValue = (e: Employee, key: string) => e[key as keyof Employee];
+    return [...matched].sort((a, b) => compareForSort(getValue(a, empSortKey), getValue(b, empSortKey), empSortDir));
+  }, [employees, empSearch, empSortKey, empSortDir]);
   const departments = useMemo(() => {
     const counts = new Map<string, number>();
     employees.forEach((e) => counts.set(e.department, (counts.get(e.department) ?? 0) + 1));
@@ -96,33 +102,33 @@ export function SubCompanyDetailPage() {
 
   const employeeColumns: Column<Employee>[] = [
     {
-      key: 'name', header: 'Employee',
+      key: 'fullName', header: 'Employee', sortable: true, sortValue: (r) => r.fullName,
       accessor: (r) => (
         <div className="flex items-center gap-3"><Avatar name={r.fullName} size="sm" />
           <div><p className="font-medium text-surface-900">{r.fullName}</p><p className="text-xs text-surface-400">{r.employeeCode}</p></div>
         </div>
       ),
     },
-    { key: 'department', header: 'Department', accessor: (r) => <span className="text-sm">{r.department}</span> },
-    { key: 'designation', header: 'Designation', accessor: (r) => <span className="text-sm text-surface-600">{r.designation}</span> },
-    { key: 'shift', header: 'Shift', accessor: (r) => r.shiftName ?? '—' },
-    { key: 'joined', header: 'Joined', width: '120px', accessor: (r) => formatDate(r.joiningDate) },
-    { key: 'status', header: 'Status', width: '100px', accessor: (r) => <StatusBadge status={r.status} /> },
+    { key: 'department', header: 'Department', sortable: true, sortValue: (r) => r.department, accessor: (r) => <span className="text-sm">{r.department}</span> },
+    { key: 'designation', header: 'Designation', sortable: true, sortValue: (r) => r.designation, accessor: (r) => <span className="text-sm text-surface-600">{r.designation}</span> },
+    { key: 'shiftName', header: 'Shift', sortable: true, sortValue: (r) => r.shiftName, accessor: (r) => r.shiftName ?? '—' },
+    { key: 'joiningDate', header: 'Joined', sortable: true, sortValue: (r) => r.joiningDate, width: '120px', accessor: (r) => formatDate(r.joiningDate) },
+    { key: 'status', header: 'Status', sortable: true, sortValue: (r) => r.status, width: '100px', accessor: (r) => <StatusBadge status={r.status} /> },
   ];
 
   const deviceColumns: Column<Device>[] = [
-    { key: 'device', header: 'Device', accessor: (r) => <div><p className="font-medium text-surface-900">{r.deviceId}</p><p className="text-xs text-surface-400">{r.name}</p></div> },
-    { key: 'model', header: 'Model', accessor: (r) => <span className="text-sm">{r.modelNumber}</span> },
-    { key: 'ip', header: 'IP', accessor: (r) => <span className="font-mono text-xs">{r.ipAddress}</span> },
-    { key: 'status', header: 'Status', width: '120px', accessor: (r) => <StatusBadge status={r.status} /> },
-    { key: 'seen', header: 'Last Seen', accessor: (r) => r.lastSeen ? <span className="text-xs">{formatDateTime(r.lastSeen)}</span> : '—' },
+    { key: 'device', header: 'Device', sortable: true, sortValue: (r) => r.deviceId, accessor: (r) => <div><p className="font-medium text-surface-900">{r.deviceId}</p><p className="text-xs text-surface-400">{r.name}</p></div> },
+    { key: 'model', header: 'Model', sortable: true, sortValue: (r) => r.modelNumber, accessor: (r) => <span className="text-sm">{r.modelNumber}</span> },
+    { key: 'ip', header: 'IP', sortable: true, sortValue: (r) => r.ipAddress, accessor: (r) => <span className="font-mono text-xs">{r.ipAddress}</span> },
+    { key: 'status', header: 'Status', sortable: true, sortValue: (r) => r.status, width: '120px', accessor: (r) => <StatusBadge status={r.status} /> },
+    { key: 'seen', header: 'Last Seen', sortable: true, sortValue: (r) => r.lastSeen, accessor: (r) => r.lastSeen ? <span className="text-xs">{formatDateTime(r.lastSeen)}</span> : '—' },
   ];
 
   const userColumns: Column<AppUser>[] = [
-    { key: 'user', header: 'User', accessor: (r) => <div><p className="font-medium text-surface-900">{r.fullName}</p><p className="text-xs text-surface-400">{r.email}</p></div> },
-    { key: 'role', header: 'Role', width: '90px', accessor: (r) => <Badge variant="success" size="sm" label={r.role} /> },
-    { key: 'status', header: 'Status', width: '100px', accessor: (r) => <StatusBadge status={r.status} /> },
-    { key: 'login', header: 'Last Login', accessor: (r) => r.lastLogin ? <span className="text-xs">{formatDateTime(r.lastLogin)}</span> : '—' },
+    { key: 'user', header: 'User', sortable: true, sortValue: (r) => r.fullName, accessor: (r) => <div><p className="font-medium text-surface-900">{r.fullName}</p><p className="text-xs text-surface-400">{r.email}</p></div> },
+    { key: 'role', header: 'Role', sortable: true, sortValue: (r) => r.role, width: '90px', accessor: (r) => <Badge variant="success" size="sm" label={r.role} /> },
+    { key: 'status', header: 'Status', sortable: true, sortValue: (r) => r.status, width: '100px', accessor: (r) => <StatusBadge status={r.status} /> },
+    { key: 'login', header: 'Last Login', sortable: true, sortValue: (r) => r.lastLogin, accessor: (r) => r.lastLogin ? <span className="text-xs">{formatDateTime(r.lastLogin)}</span> : '—' },
   ];
 
   async function handleToggle() {
@@ -259,6 +265,9 @@ export function SubCompanyDetailPage() {
           data={filteredEmployees.slice((empPage - 1) * PAGE_SIZE, empPage * PAGE_SIZE)}
           columns={employeeColumns} keyExtractor={(r) => r.id} loading={loadingEmp}
           searchable searchValue={empSearch} onSearchChange={(v) => { setEmpSearch(v); setEmpPage(1); }} searchPlaceholder="Search employees..."
+          sortKey={empSortKey}
+          sortDir={empSortDir}
+          onSortChange={(key, dir) => { setEmpSortKey(key); setEmpSortDir(dir); setEmpPage(1); }}
           pagination={{ page: empPage, totalPages: Math.max(1, Math.ceil(filteredEmployees.length / PAGE_SIZE)), total: filteredEmployees.length, pageSize: PAGE_SIZE, onPageChange: setEmpPage }}
           emptyState={{ title: 'No employees found', icon: <Users className="h-8 w-8" /> }}
         />

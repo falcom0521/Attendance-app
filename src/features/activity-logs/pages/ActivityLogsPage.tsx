@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/Button';
 import { useActivityLogs } from '../hooks/useActivityLogs';
 import { ActivityLogTable } from '../components/ActivityLogTable';
 import { useCompanies } from '@/features/companies/hooks/useCompanies';
+import type { SortDir } from '@/lib/sort';
 
 const MODULE_OPTIONS = [
   'Companies', 'Sub Companies', 'Devices', 'Users', 'Employees', 'Shifts', 'Holidays',
@@ -35,6 +36,8 @@ export function ActivityLogsPage() {
   const [companyId, setCompanyId] = useState('');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
+  const [sortKey, setSortKey] = useState<string | null>(null);
+  const [sortDir, setSortDir] = useState<SortDir | null>(null);
 
   const rangeError = startDate && endDate && startDate > endDate ? 'From date must be on or before the To date' : '';
   const { data: companies } = useCompanies({ page: 1, pageSize: 100 });
@@ -48,6 +51,8 @@ export function ActivityLogsPage() {
     // An impossible range is not sent to the server; the message below explains why nothing changed.
     startDate: rangeError ? undefined : startDate || undefined,
     endDate: rangeError ? undefined : endDate || undefined,
+    sortBy: sortKey ?? undefined,
+    sortDir: sortDir ?? undefined,
   });
 
   const filtered = !!(search || module || action || role || companyId || startDate || endDate);
@@ -81,6 +86,7 @@ export function ActivityLogsPage() {
         onRetry={refetch}
         search={{ value: search, onChange: on(setSearch) }}
         pagination={data ? { page, totalPages: data.totalPages, total: data.total, pageSize: data.pageSize, onPageChange: setPage } : undefined}
+        sort={{ key: sortKey, dir: sortDir, onChange: (key, dir) => { setSortKey(key); setSortDir(dir); setPage(1); } }}
       />
     </div>
   );

@@ -24,6 +24,9 @@ export interface ApiResponse<T> {
 export interface FilterParams {
   search?: string;
   status?: Status;
+  /** Field name to sort by (service-specific), applied before pagination slices the page. */
+  sortBy?: string;
+  sortDir?: SortOrder;
   [key: string]: unknown;
 }
 

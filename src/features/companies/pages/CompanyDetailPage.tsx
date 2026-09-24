@@ -29,6 +29,7 @@ import { hasPermission } from '@/config/permissions';
 import type { SubCompany } from '@/types/company';
 import type { Device } from '@/types/device';
 import type { AppUser } from '@/types/user';
+import type { SortDir } from '@/lib/sort';
 
 export function CompanyDetailPage() {
   const { companyId = '' } = useParams<{ companyId: string }>();
@@ -46,12 +47,14 @@ export function CompanyDetailPage() {
   const [viewUser, setViewUser] = useState<AppUser | null>(null);
   const [editUser, setEditUser] = useState<AppUser | null>(null);
   const [logPage, setLogPage] = useState(1);
+  const [logSortKey, setLogSortKey] = useState<string | null>(null);
+  const [logSortDir, setLogSortDir] = useState<SortDir | null>(null);
 
   const { data: company, isLoading, error, refetch } = useCompany(companyId);
   const { data: subCompanies = [], isLoading: loadingSubs } = useSubCompaniesByCompany(companyId);
   const { data: deviceData, isLoading: loadingDevices } = useDevices({ companyId, page: 1, pageSize: 100 });
   const { data: userData, isLoading: loadingUsers } = useUsers({ companyId, page: 1, pageSize: 100 });
-  const { data: logs, isLoading: loadingLogs } = useActivityLogs({ companyId, page: logPage, pageSize: 10 });
+  const { data: logs, isLoading: loadingLogs } = useActivityLogs({ companyId, page: logPage, pageSize: 10, sortBy: logSortKey ?? undefined, sortDir: logSortDir ?? undefined });
   const toggle = useToggleCompanyStatus();
 
   if (isLoading) {
@@ -76,7 +79,7 @@ export function CompanyDetailPage() {
 
   const subColumns: Column<SubCompany>[] = [
     {
-      key: 'name', header: 'Sub Company',
+      key: 'name', header: 'Sub Company', sortable: true, sortValue: (r) => r.name,
       accessor: (r) => (
         <div className="flex items-center gap-3">
           <div className="h-8 w-8 bg-purple-50 rounded-lg flex items-center justify-center flex-shrink-0"><GitBranch className="h-4 w-4 text-purple-600" /></div>
@@ -84,27 +87,27 @@ export function CompanyDetailPage() {
         </div>
       ),
     },
-    { key: 'city', header: 'Location', accessor: (r) => <span className="text-sm">{[r.city, r.state].filter(Boolean).join(', ') || '—'}</span> },
-    { key: 'employees', header: 'Employees', width: '100px', accessor: (r) => <span className="font-medium">{r.employeeCount}</span> },
-    { key: 'devices', header: 'Devices', width: '90px', accessor: (r) => <span className="font-medium">{r.deviceCount}</span> },
-    { key: 'hr', header: 'HR Users', width: '90px', accessor: (r) => <span className="font-medium">{r.hrCount}</span> },
-    { key: 'status', header: 'Status', width: '100px', accessor: (r) => <StatusBadge status={r.status} /> },
+    { key: 'city', header: 'Location', sortable: true, sortValue: (r) => r.city, accessor: (r) => <span className="text-sm">{[r.city, r.state].filter(Boolean).join(', ') || '—'}</span> },
+    { key: 'employees', header: 'Employees', sortable: true, sortValue: (r) => r.employeeCount, width: '100px', accessor: (r) => <span className="font-medium">{r.employeeCount}</span> },
+    { key: 'devices', header: 'Devices', sortable: true, sortValue: (r) => r.deviceCount, width: '90px', accessor: (r) => <span className="font-medium">{r.deviceCount}</span> },
+    { key: 'hr', header: 'HR Users', sortable: true, sortValue: (r) => r.hrCount, width: '90px', accessor: (r) => <span className="font-medium">{r.hrCount}</span> },
+    { key: 'status', header: 'Status', sortable: true, sortValue: (r) => r.status, width: '100px', accessor: (r) => <StatusBadge status={r.status} /> },
   ];
 
   const deviceColumns: Column<Device>[] = [
-    { key: 'device', header: 'Device', accessor: (r) => <div><p className="font-medium text-surface-900">{r.deviceId}</p><p className="text-xs text-surface-400">{r.name}</p></div> },
-    { key: 'model', header: 'Model', accessor: (r) => <span className="text-sm">{r.modelNumber}</span> },
-    { key: 'sub', header: 'Sub Company', accessor: (r) => <span className="text-sm">{r.subCompanyName ?? '—'}</span> },
-    { key: 'status', header: 'Status', width: '120px', accessor: (r) => <StatusBadge status={r.status} /> },
-    { key: 'seen', header: 'Last Seen', accessor: (r) => r.lastSeen ? <span className="text-xs">{formatDateTime(r.lastSeen)}</span> : '—' },
+    { key: 'device', header: 'Device', sortable: true, sortValue: (r) => r.deviceId, accessor: (r) => <div><p className="font-medium text-surface-900">{r.deviceId}</p><p className="text-xs text-surface-400">{r.name}</p></div> },
+    { key: 'model', header: 'Model', sortable: true, sortValue: (r) => r.modelNumber, accessor: (r) => <span className="text-sm">{r.modelNumber}</span> },
+    { key: 'sub', header: 'Sub Company', sortable: true, sortValue: (r) => r.subCompanyName, accessor: (r) => <span className="text-sm">{r.subCompanyName ?? '—'}</span> },
+    { key: 'status', header: 'Status', sortable: true, sortValue: (r) => r.status, width: '120px', accessor: (r) => <StatusBadge status={r.status} /> },
+    { key: 'seen', header: 'Last Seen', sortable: true, sortValue: (r) => r.lastSeen, accessor: (r) => r.lastSeen ? <span className="text-xs">{formatDateTime(r.lastSeen)}</span> : '—' },
   ];
 
   const userColumns: Column<AppUser>[] = [
-    { key: 'user', header: 'User', accessor: (r) => <div><p className="font-medium text-surface-900">{r.fullName}</p><p className="text-xs text-surface-400">{r.email}</p></div> },
-    { key: 'role', header: 'Role', width: '90px', accessor: (r) => <Badge variant={r.role === 'ADMIN' ? 'info' : 'success'} size="sm" label={r.role} /> },
-    { key: 'sub', header: 'Sub Company', accessor: (r) => <span className="text-sm">{r.subCompanyName ?? 'All sub companies'}</span> },
-    { key: 'status', header: 'Status', width: '100px', accessor: (r) => <StatusBadge status={r.status} /> },
-    { key: 'login', header: 'Last Login', accessor: (r) => r.lastLogin ? <span className="text-xs">{formatDateTime(r.lastLogin)}</span> : '—' },
+    { key: 'user', header: 'User', sortable: true, sortValue: (r) => r.fullName, accessor: (r) => <div><p className="font-medium text-surface-900">{r.fullName}</p><p className="text-xs text-surface-400">{r.email}</p></div> },
+    { key: 'role', header: 'Role', sortable: true, sortValue: (r) => r.role, width: '90px', accessor: (r) => <Badge variant={r.role === 'ADMIN' ? 'info' : 'success'} size="sm" label={r.role} /> },
+    { key: 'sub', header: 'Sub Company', sortable: true, sortValue: (r) => r.subCompanyName, accessor: (r) => <span className="text-sm">{r.subCompanyName ?? 'All sub companies'}</span> },
+    { key: 'status', header: 'Status', sortable: true, sortValue: (r) => r.status, width: '100px', accessor: (r) => <StatusBadge status={r.status} /> },
+    { key: 'login', header: 'Last Login', sortable: true, sortValue: (r) => r.lastLogin, accessor: (r) => r.lastLogin ? <span className="text-xs">{formatDateTime(r.lastLogin)}</span> : '—' },
   ];
 
   async function handleToggle() {
@@ -245,6 +248,7 @@ export function CompanyDetailPage() {
         <ActivityLogTable
           logs={logs?.data ?? []} loading={loadingLogs && !logs} compact
           pagination={logs ? { page: logPage, totalPages: logs.totalPages, total: logs.total, pageSize: logs.pageSize, onPageChange: setLogPage } : undefined}
+          sort={{ key: logSortKey, dir: logSortDir, onChange: (key, dir) => { setLogSortKey(key); setLogSortDir(dir); setLogPage(1); } }}
         />
       )}
 

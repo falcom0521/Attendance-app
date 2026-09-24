@@ -102,22 +102,24 @@ export function ShiftFormDialog({ open, onClose, shift }: { open: boolean; onClo
           <Input label="Break End" type="time" error={errors.breakEndTime?.message} {...register('breakEndTime')} />
         </div>
         <Input label="Grace Period (minutes)" type="number" error={errors.gracePeriodMinutes?.message} {...register('gracePeriodMinutes', { valueAsNumber: true })} />
-        <Input
-          label="Minimum Working Hours"
-          type="number"
-          inputMode="numeric"
-          min={1}
-          max={24}
-          step={1}
-          placeholder="e.g. 8"
-          error={errors.minimumWorkingHours?.message}
-          hint={
-            settings?.minimumWorkingHoursEnabled
-              ? 'Optional. Employee is Present once they complete these hours that day, regardless of arrival/departure time.'
-              : 'Optional. Takes effect only once Flexible Timing is enabled in Attendance Settings.'
-          }
-          {...register('minimumWorkingHours', { valueAsNumber: true })}
-        />
+        {settings?.minimumWorkingHoursEnabled ? (
+          <Input
+            label="Minimum Working Hours"
+            type="number"
+            inputMode="numeric"
+            min={1}
+            max={24}
+            step={1}
+            placeholder="e.g. 8"
+            error={errors.minimumWorkingHours?.message}
+            hint="Optional. Employee is Present once they complete these hours that day, regardless of arrival/departure time."
+            {...register('minimumWorkingHours', { valueAsNumber: true })}
+          />
+        ) : (
+          <p className="text-xs text-surface-400 -mt-1">
+            Minimum Working Hours is available once Flexible Timing is enabled in Attendance Settings.
+          </p>
+        )}
         <Select label="Status" required options={[{ label: 'Active', value: 'ACTIVE' }, { label: 'Inactive', value: 'INACTIVE' }]} error={errors.status?.message} {...register('status')} />
       </form>
     </Dialog>

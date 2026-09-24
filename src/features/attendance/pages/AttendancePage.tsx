@@ -25,6 +25,8 @@ import { formatDate, formatTime, minutesToDisplay, todayISO } from '@/utils/date
 import { ManualAttendanceDialog } from '../components/ManualAttendanceDialog';
 import { MarkLeaveDialog } from '../components/MarkLeaveDialog';
 import type { AttendanceRecord, AttendanceStatus } from '@/types/attendance';
+import { useSort } from '@/hooks/useSort';
+import { SortableTh } from '@/components/ui/SortableTh';
 
 const STATUS_OPTIONS = [
   { label: 'All Status', value: '' },
@@ -90,8 +92,13 @@ export function AttendancePage() {
   const canManage = !!user && hasPermission(user.role, 'attendance:manage');
   // const canViewRequests = !!user && hasPermission(user.role, 'requests:view');
   const records = data?.records ?? [];
-  const paged = records.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const { sortKey, sortDir, onSort, sortedData: sortedRecords } = useSort<AttendanceRecord>(
+    records,
+    (r, key) => r[key as keyof AttendanceRecord]
+  );
+  const paged = sortedRecords.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
   const stats = data?.stats;
+  const handleSort = (key: string) => { onSort(key); setPage(1); };
 
   return (
     <div className="page-container">
@@ -182,16 +189,16 @@ export function AttendancePage() {
                 <table className="w-full text-sm">
                   <thead>
                     <tr>
-                      <th className="table-th">Employee</th>
-                      {scope.showSubCompany && <th className="table-th">Sub Company</th>}
-                      <th className="table-th">Department</th>
-                      <th className="table-th">Shift</th>
-                      <th className="table-th">Punch In</th>
-                      <th className="table-th">Punch Out</th>
-                      <th className="table-th">Working</th>
-                      <th className="table-th">Late</th>
-                      <th className="table-th">OT</th>
-                      <th className="table-th">Status</th>
+                      <SortableTh label="Employee" sortKey="employeeName" activeKey={sortKey} dir={sortDir} onSort={handleSort} />
+                      {scope.showSubCompany && <SortableTh label="Sub Company" sortKey="subCompanyName" activeKey={sortKey} dir={sortDir} onSort={handleSort} />}
+                      <SortableTh label="Department" sortKey="department" activeKey={sortKey} dir={sortDir} onSort={handleSort} />
+                      <SortableTh label="Shift" sortKey="shiftName" activeKey={sortKey} dir={sortDir} onSort={handleSort} />
+                      <SortableTh label="Punch In" sortKey="firstPunchIn" activeKey={sortKey} dir={sortDir} onSort={handleSort} />
+                      <SortableTh label="Punch Out" sortKey="lastPunchOut" activeKey={sortKey} dir={sortDir} onSort={handleSort} />
+                      <SortableTh label="Working" sortKey="workingMinutes" activeKey={sortKey} dir={sortDir} onSort={handleSort} />
+                      <SortableTh label="Late" sortKey="lateMinutes" activeKey={sortKey} dir={sortDir} onSort={handleSort} />
+                      <SortableTh label="OT" sortKey="overtimeMinutes" activeKey={sortKey} dir={sortDir} onSort={handleSort} />
+                      <SortableTh label="Status" sortKey="status" activeKey={sortKey} dir={sortDir} onSort={handleSort} />
                       <th className="table-th">Actions</th>
                     </tr>
                   </thead>

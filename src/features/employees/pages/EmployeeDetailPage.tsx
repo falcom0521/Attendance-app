@@ -16,6 +16,9 @@ import { StatusBadge as AttBadge } from '@/components/ui/Badge';
 import { useToast } from '@/components/feedback/ToastContext';
 import { reportService } from '@/services/mock';
 import { EmployeeFormDialog } from '../components/EmployeeFormDialog';
+import type { AttendanceRecord } from '@/types/attendance';
+import { useSort } from '@/hooks/useSort';
+import { SortableTh } from '@/components/ui/SortableTh';
 
 const TABS = [
   { id: 'overview', label: 'Overview' },
@@ -35,6 +38,10 @@ export function EmployeeDetailPage() {
   const { data: employee, isLoading, error, refetch } = useEmployee(employeeId ?? '');
   const { month, year } = currentMonthYear();
   const { data: monthlyRecords, isLoading: loadingAtt } = useEmployeeMonthlyAttendance(employeeId ?? '', month, year);
+  const { sortKey: attSortKey, sortDir: attSortDir, onSort: onAttSort, sortedData: sortedMonthlyRecords } = useSort<AttendanceRecord>(
+    monthlyRecords ?? [],
+    (r, key) => r[key as keyof AttendanceRecord]
+  );
 
   const basePath = user?.role === 'ADMIN' ? '/admin' : '/hr';
 
@@ -135,19 +142,19 @@ export function EmployeeDetailPage() {
                 <table className="w-full text-sm">
                   <thead>
                     <tr>
-                      <th className="table-th">Date</th>
-                      <th className="table-th">Shift</th>
-                      <th className="table-th">Punch In</th>
-                      <th className="table-th">Punch Out</th>
-                      <th className="table-th">Working</th>
-                      <th className="table-th">Late</th>
-                      <th className="table-th">Status</th>
+                      <SortableTh label="Date" sortKey="date" activeKey={attSortKey} dir={attSortDir} onSort={onAttSort} />
+                      <SortableTh label="Shift" sortKey="shiftName" activeKey={attSortKey} dir={attSortDir} onSort={onAttSort} />
+                      <SortableTh label="Punch In" sortKey="firstPunchIn" activeKey={attSortKey} dir={attSortDir} onSort={onAttSort} />
+                      <SortableTh label="Punch Out" sortKey="lastPunchOut" activeKey={attSortKey} dir={attSortDir} onSort={onAttSort} />
+                      <SortableTh label="Working" sortKey="workingMinutes" activeKey={attSortKey} dir={attSortDir} onSort={onAttSort} />
+                      <SortableTh label="Late" sortKey="lateMinutes" activeKey={attSortKey} dir={attSortDir} onSort={onAttSort} />
+                      <SortableTh label="Status" sortKey="status" activeKey={attSortKey} dir={attSortDir} onSort={onAttSort} />
                     </tr>
                   </thead>
                   <tbody>
-                    {(monthlyRecords ?? []).length === 0 ? (
+                    {sortedMonthlyRecords.length === 0 ? (
                       <tr><td colSpan={7} className="py-12 text-center text-sm text-surface-400">No attendance records</td></tr>
-                    ) : (monthlyRecords ?? []).map((r) => (
+                    ) : sortedMonthlyRecords.map((r) => (
                       <tr key={r.id} className="table-tr">
                         <td className="table-td font-medium">{formatDate(r.date, 'dd MMM')}</td>
                         <td className="table-td text-surface-600">{r.shiftName}</td>

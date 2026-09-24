@@ -11,6 +11,7 @@ import { getAllAttendanceRecords } from './attendance.service';
 import { MANUAL_DEVICE_ID } from './attendanceEngine';
 import { logActivity, getActivityActorName } from './activityLog.service';
 import { getCompaniesSnapshot, getSubCompaniesSnapshot } from './company.service';
+import { sortRecords } from '@/lib/sort';
 
 // eslint-disable-next-line prefer-const
 let devices: Device[] = [...mockDevices];
@@ -35,6 +36,7 @@ export const deviceService = {
         (d) => d.deviceId.toLowerCase().includes(q) || d.name.toLowerCase().includes(q) || d.serialNumber.toLowerCase().includes(q)
       );
     }
+    filtered = sortRecords(filtered, params?.sortBy, params?.sortDir, (d, key) => d[key as keyof Device]);
     const page = params?.page ?? 1;
     const pageSize = params?.pageSize ?? 10;
     const start = (page - 1) * pageSize;
@@ -211,12 +213,14 @@ export const deviceService = {
         if (filters?.endDate && p.date > filters.endDate) return false;
         if (q && !p.employeeName.toLowerCase().includes(q) && !p.employeeCode.toLowerCase().includes(q)) return false;
         return true;
-      })
-      .sort((a, b) => b.punchTime.localeCompare(a.punchTime));
+      });
+    const sorted = filters?.sortBy
+      ? sortRecords(filtered, filters.sortBy, filters.sortDir, (p, key) => (p as unknown as Record<string, unknown>)[key])
+      : [...filtered].sort((a, b) => b.punchTime.localeCompare(a.punchTime));
 
     const page = filters?.page ?? 1;
     const pageSize = filters?.pageSize ?? 15;
-    const data: DevicePunchLog[] = filtered.slice((page - 1) * pageSize, page * pageSize).map((p) => ({
+    const data: DevicePunchLog[] = sorted.slice((page - 1) * pageSize, page * pageSize).map((p) => ({
       id: p.id,
       employeeId: p.employeeId,
       employeeCode: p.employeeCode,

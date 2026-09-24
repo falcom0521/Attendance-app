@@ -17,6 +17,7 @@ import { isSuperAdminRole } from '@/config/permissions';
 import type { Device } from '@/types/device';
 import { formatDateTime } from '@/utils/date';
 import { cn } from '@/lib/utils';
+import type { SortDir } from '@/lib/sort';
 
 const STATUS_OPTIONS = [
   { label: 'All Status', value: '' },
@@ -54,6 +55,9 @@ export function DevicesPage() {
   const [reallocateDevice, setReallocateDevice] = useState<Device | null>(null);
   const [deallocateDevice, setDeallocateDevice] = useState<Device | null>(null);
 
+  const [sortKey, setSortKey] = useState<string | null>(null);
+  const [sortDir, setSortDir] = useState<SortDir | null>(null);
+
   // Admin only sees their own company's devices (narrowed by the sub-company selector); Super Admin sees all.
   const { data, isLoading, error, refetch } = useDevices({
     page,
@@ -62,11 +66,13 @@ export function DevicesPage() {
     status: status || undefined,
     companyId: isSuperAdmin ? undefined : scope.companyId,
     subCompanyId: isSuperAdmin ? undefined : scope.subCompanyId,
+    sortBy: sortKey ?? undefined,
+    sortDir: sortDir ?? undefined,
   });
 
   const columns: Column<Device>[] = [
     {
-      key: 'deviceId', header: 'Device',
+      key: 'deviceId', header: 'Device', sortable: true, sortValue: (r) => r.deviceId,
       accessor: (row) => (
         <div className="flex items-center gap-3">
           <div className={cn('h-2 w-2 rounded-full flex-shrink-0', statusDot[row.status] ?? 'bg-surface-400')} />
@@ -77,10 +83,10 @@ export function DevicesPage() {
         </div>
       ),
     },
-    { key: 'modelNumber', header: 'Model', accessor: (r) => <span className="text-sm">{r.modelNumber}</span> },
-    { key: 'serialNumber', header: 'Serial Number', accessor: (r) => <span className="font-mono text-xs text-surface-600">{r.serialNumber}</span> },
+    { key: 'modelNumber', header: 'Model', sortable: true, sortValue: (r) => r.modelNumber, accessor: (r) => <span className="text-sm">{r.modelNumber}</span> },
+    { key: 'serialNumber', header: 'Serial Number', sortable: true, sortValue: (r) => r.serialNumber, accessor: (r) => <span className="font-mono text-xs text-surface-600">{r.serialNumber}</span> },
     {
-      key: 'allocation', header: 'Allocated To',
+      key: 'subCompanyName', header: 'Allocated To', sortable: true, sortValue: (r) => r.subCompanyName,
       accessor: (r) => r.subCompanyName ? (
         <div>
           <p className="text-sm font-medium">{r.subCompanyName}</p>
@@ -88,8 +94,8 @@ export function DevicesPage() {
         </div>
       ) : <span className="text-surface-400 text-sm">—</span>,
     },
-    { key: 'status', header: 'Status', accessor: (r) => <StatusBadge status={r.status} />, width: '120px' },
-    { key: 'lastSeen', header: 'Last Seen', accessor: (r) => r.lastSeen ? <span className="text-xs">{formatDateTime(r.lastSeen)}</span> : '—' },
+    { key: 'status', header: 'Status', sortable: true, sortValue: (r) => r.status, accessor: (r) => <StatusBadge status={r.status} />, width: '120px' },
+    { key: 'lastSeen', header: 'Last Seen', sortable: true, sortValue: (r) => r.lastSeen, accessor: (r) => r.lastSeen ? <span className="text-xs">{formatDateTime(r.lastSeen)}</span> : '—' },
     {
       key: 'actions', header: 'Actions', width: '150px',
       accessor: (row) => (
@@ -137,6 +143,9 @@ export function DevicesPage() {
         searchable searchValue={search} onSearchChange={(v) => { setSearch(v); setPage(1); }}
         searchPlaceholder="Search devices..."
         pagination={data ? { page, totalPages: data.totalPages, total: data.total, pageSize: data.pageSize, onPageChange: setPage } : undefined}
+        sortKey={sortKey}
+        sortDir={sortDir}
+        onSortChange={(key, dir) => { setSortKey(key); setSortDir(dir); setPage(1); }}
         onRowClick={(row) => navigate(`${basePath}/devices/${row.id}`)}
         emptyState={{ title: 'No devices found', icon: <Monitor className="h-8 w-8" />, action: canCreate ? { label: 'Add Device', onClick: () => setFormOpen(true), icon: <Plus className="h-4 w-4" /> } : undefined }}
       />

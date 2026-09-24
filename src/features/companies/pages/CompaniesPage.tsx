@@ -14,6 +14,7 @@ import { useAuthStore } from '@/store/authStore';
 import { hasPermission } from '@/config/permissions';
 import type { Company } from '@/types/company';
 import { formatDate } from '@/utils/date';
+import type { SortDir } from '@/lib/sort';
 
 const STATUS_OPTIONS = [
   { label: 'All Status', value: '' },
@@ -34,11 +35,16 @@ export function CompaniesPage() {
   const [editCompany, setEditCompany] = useState<Company | null>(null);
   const [toggleTarget, setToggleTarget] = useState<Company | null>(null);
 
+  const [sortKey, setSortKey] = useState<string | null>(null);
+  const [sortDir, setSortDir] = useState<SortDir | null>(null);
+
   const { data, isLoading, error, refetch } = useCompanies({
     page,
     pageSize: 10,
     search: search || undefined,
     status: (status as 'ACTIVE' | 'INACTIVE') || undefined,
+    sortBy: sortKey ?? undefined,
+    sortDir: sortDir ?? undefined,
   });
 
   const toggleStatus = useToggleCompanyStatus();
@@ -48,6 +54,7 @@ export function CompaniesPage() {
       key: 'name',
       header: 'Company',
       sortable: true,
+      sortValue: (r) => r.name,
       accessor: (row) => (
         <div className="flex items-center gap-3">
           <div className="h-8 w-8 bg-brand-50 rounded-lg flex items-center justify-center flex-shrink-0">
@@ -61,11 +68,11 @@ export function CompaniesPage() {
       ),
     },
     { key: 'location', header: 'Location', accessor: (r) => <span className="text-sm text-surface-600">{[r.city, r.state].filter(Boolean).join(', ') || '—'}</span> },
-    { key: 'subCompanyCount', header: 'Sub Companies', accessor: (r) => <span className="font-medium">{r.subCompanyCount}</span>, width: '120px' },
-    { key: 'deviceCount', header: 'Devices', accessor: (r) => <span className="font-medium">{r.deviceCount}</span>, width: '80px' },
-    { key: 'employeeCount', header: 'Employees', accessor: (r) => <span className="font-medium">{r.employeeCount}</span>, width: '100px' },
-    { key: 'status', header: 'Status', accessor: (r) => <StatusBadge status={r.status} />, width: '100px' },
-    { key: 'createdAt', header: 'Created', sortable: true, accessor: (r) => formatDate(r.createdAt), width: '130px' },
+    { key: 'subCompanyCount', header: 'Sub Companies', sortable: true, sortValue: (r) => r.subCompanyCount, accessor: (r) => <span className="font-medium">{r.subCompanyCount}</span>, width: '120px' },
+    { key: 'deviceCount', header: 'Devices', sortable: true, sortValue: (r) => r.deviceCount, accessor: (r) => <span className="font-medium">{r.deviceCount}</span>, width: '80px' },
+    { key: 'employeeCount', header: 'Employees', sortable: true, sortValue: (r) => r.employeeCount, accessor: (r) => <span className="font-medium">{r.employeeCount}</span>, width: '100px' },
+    { key: 'status', header: 'Status', sortable: true, sortValue: (r) => r.status, accessor: (r) => <StatusBadge status={r.status} />, width: '100px' },
+    { key: 'createdAt', header: 'Created', sortable: true, sortValue: (r) => r.createdAt, accessor: (r) => formatDate(r.createdAt), width: '130px' },
     {
       key: 'actions',
       header: 'Actions',
@@ -150,6 +157,9 @@ export function CompaniesPage() {
         onSearchChange={(v) => { setSearch(v); setPage(1); }}
         searchPlaceholder="Search companies..."
         onRowClick={(row) => navigate(`/super-admin/companies/${row.id}`)}
+        sortKey={sortKey}
+        sortDir={sortDir}
+        onSortChange={(key, dir) => { setSortKey(key); setSortDir(dir); setPage(1); }}
         pagination={data ? {
           page,
           totalPages: data.totalPages,

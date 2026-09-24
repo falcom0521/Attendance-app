@@ -5,6 +5,7 @@ import { mockSubCompanies } from '@/mocks/data/subCompanies';
 import { sleep } from '@/lib/utils';
 import { assertWritable } from './writeGuard';
 import { getActivityActorRole, logActivity } from './activityLog.service';
+import { sortRecords } from '@/lib/sort';
 
 // eslint-disable-next-line prefer-const
 let users: AppUser[] = [...mockUsers];
@@ -56,6 +57,7 @@ export const userService = {
           u.username.toLowerCase().includes(q)
       );
     }
+    filtered = sortRecords(filtered, params?.sortBy, params?.sortDir, (u, key) => u[key as keyof AppUser]);
     const page = params?.page ?? 1;
     const pageSize = params?.pageSize ?? 10;
     const start = (page - 1) * pageSize;

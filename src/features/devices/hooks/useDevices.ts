@@ -14,7 +14,7 @@ export const deviceKeys = {
   punchLogs: (id: string, filters?: unknown) => [...deviceKeys.all, 'punchLogs', id, filters] as const,
 };
 
-export function useDevices(params?: { companyId?: string; subCompanyId?: string; status?: string; search?: string; page?: number; pageSize?: number }) {
+export function useDevices(params?: { companyId?: string; subCompanyId?: string; status?: string; search?: string; page?: number; pageSize?: number; sortBy?: string; sortDir?: 'asc' | 'desc' }) {
   return useQuery({
     queryKey: deviceKeys.list(params),
     queryFn: () => deviceService.getDevices(params as Parameters<typeof deviceService.getDevices>[0]),

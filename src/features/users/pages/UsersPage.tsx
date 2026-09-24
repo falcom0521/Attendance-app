@@ -16,6 +16,7 @@ import { hasPermission, isSuperAdminRole, ROLE_LABELS } from '@/config/permissio
 import { useCompanies } from '@/features/companies/hooks/useCompanies';
 import type { AppUser } from '@/types/user';
 import { formatDate } from '@/utils/date';
+import type { SortDir } from '@/lib/sort';
 
 const ROLE_OPTIONS = [
   { label: 'All Roles', value: '' },
@@ -50,19 +51,24 @@ export function UsersPage() {
   const [toggleTarget, setToggleTarget] = useState<AppUser | null>(null);
   const [viewUser, setViewUser] = useState<AppUser | null>(null);
 
+  const [sortKey, setSortKey] = useState<string | null>(null);
+  const [sortDir, setSortDir] = useState<SortDir | null>(null);
+
   const { data, isLoading, error, refetch } = useUsers({
     page, pageSize: 10,
     search: search || undefined,
     role: role || undefined,
     status: (status as 'ACTIVE' | 'INACTIVE') || undefined,
     companyId: isSuperAdmin ? companyFilter || undefined : (user?.companyId ?? ''),
+    sortBy: sortKey ?? undefined,
+    sortDir: sortDir ?? undefined,
   });
   const { data: companiesData } = useCompanies(isSuperAdmin ? { page: 1, pageSize: 100 } : undefined);
   const toggleStatus = useToggleUserStatus();
 
   const columns: Column<AppUser>[] = [
     {
-      key: 'name', header: 'User',
+      key: 'fullName', header: 'User', sortable: true, sortValue: (r) => r.fullName,
       accessor: (row) => (
         <div className="flex items-center gap-3">
           <Avatar name={row.fullName} size="sm" />
@@ -73,12 +79,12 @@ export function UsersPage() {
         </div>
       ),
     },
-    { key: 'role', header: 'Role', accessor: (r) => <Badge variant={roleBadge[r.role] ?? 'surface'}>{ROLE_LABELS[r.role] ?? r.role}</Badge>, width: '190px' },
-    { key: 'companyName', header: 'Company', accessor: (r) => <span className="text-sm">{r.companyName ?? '—'}</span> },
-    { key: 'subCompanyName', header: 'Sub Company', accessor: (r) => <span className="text-sm">{r.subCompanyName ?? (r.role === 'ADMIN' ? 'All sub companies' : '—')}</span> },
-    { key: 'status', header: 'Status', accessor: (r) => <StatusBadge status={r.status} />, width: '100px' },
-    { key: 'lastLogin', header: 'Last Login', accessor: (r) => r.lastLogin ? formatDate(r.lastLogin, 'dd MMM yyyy') : '—', width: '130px' },
-    { key: 'createdAt', header: 'Created', accessor: (r) => formatDate(r.createdAt), width: '120px' },
+    { key: 'role', header: 'Role', sortable: true, sortValue: (r) => r.role, accessor: (r) => <Badge variant={roleBadge[r.role] ?? 'surface'}>{ROLE_LABELS[r.role] ?? r.role}</Badge>, width: '190px' },
+    { key: 'companyName', header: 'Company', sortable: true, sortValue: (r) => r.companyName, accessor: (r) => <span className="text-sm">{r.companyName ?? '—'}</span> },
+    { key: 'subCompanyName', header: 'Sub Company', sortable: true, sortValue: (r) => r.subCompanyName, accessor: (r) => <span className="text-sm">{r.subCompanyName ?? (r.role === 'ADMIN' ? 'All sub companies' : '—')}</span> },
+    { key: 'status', header: 'Status', sortable: true, sortValue: (r) => r.status, accessor: (r) => <StatusBadge status={r.status} />, width: '100px' },
+    { key: 'lastLogin', header: 'Last Login', sortable: true, sortValue: (r) => r.lastLogin, accessor: (r) => r.lastLogin ? formatDate(r.lastLogin, 'dd MMM yyyy') : '—', width: '130px' },
+    { key: 'createdAt', header: 'Created', sortable: true, sortValue: (r) => r.createdAt, accessor: (r) => formatDate(r.createdAt), width: '120px' },
     {
       key: 'actions', header: 'Actions', width: '90px',
       accessor: (row) => (
@@ -137,6 +143,9 @@ export function UsersPage() {
         searchable searchValue={search} onSearchChange={(v) => { setSearch(v); setPage(1); }}
         searchPlaceholder="Search users..."
         onRowClick={setViewUser}
+        sortKey={sortKey}
+        sortDir={sortDir}
+        onSortChange={(key, dir) => { setSortKey(key); setSortDir(dir); setPage(1); }}
         pagination={data ? { page, totalPages: data.totalPages, total: data.total, pageSize: data.pageSize, onPageChange: setPage } : undefined}
         emptyState={{ title: 'No users found', icon: <UserCog className="h-8 w-8" />, action: canManage ? { label: 'Add User', onClick: () => setFormOpen(true), icon: <Plus className="h-4 w-4" /> } : undefined }}
       />

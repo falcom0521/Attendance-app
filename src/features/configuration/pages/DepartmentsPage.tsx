@@ -74,6 +74,7 @@ export function DepartmentsPage() {
       key: 'name',
       header: 'Department',
       sortable: true,
+      sortValue: (row) => row.name,
       accessor: (row) => (
         <div className="flex items-center gap-3">
           <div className="h-8 w-8 bg-violet-50 rounded-lg flex items-center justify-center flex-shrink-0">
@@ -91,6 +92,8 @@ export function DepartmentsPage() {
     {
       key: 'status',
       header: 'Status',
+      sortable: true,
+      sortValue: (row) => row.status,
       width: '110px',
       accessor: (row) => <StatusBadge status={row.status} />,
     },
@@ -98,6 +101,7 @@ export function DepartmentsPage() {
       key: 'createdAt',
       header: 'Created',
       sortable: true,
+      sortValue: (row) => row.createdAt,
       width: '130px',
       accessor: (row) => (
         <span className="text-sm text-surface-500">{formatDate(row.createdAt)}</span>
@@ -107,6 +111,7 @@ export function DepartmentsPage() {
       key: 'updatedAt',
       header: 'Last Updated',
       sortable: true,
+      sortValue: (row) => row.updatedAt,
       width: '130px',
       accessor: (row) => (
         <span className="text-sm text-surface-500">{formatDate(row.updatedAt)}</span>

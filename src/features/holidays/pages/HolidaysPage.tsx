@@ -30,7 +30,7 @@ export function HolidaysPage() {
 
   const columns: Column<Holiday>[] = [
     {
-      key: 'name', header: 'Holiday',
+      key: 'name', header: 'Holiday', sortable: true, sortValue: (row) => row.name,
       accessor: (row) => (
         <div className="flex items-center gap-3">
           <div className="h-8 w-8 bg-indigo-50 rounded-lg flex items-center justify-center flex-shrink-0">
@@ -44,10 +44,10 @@ export function HolidaysPage() {
       ),
     },
     ...(scope.showSubCompany
-      ? [{ key: 'subCompany', header: 'Sub Company', accessor: (r: Holiday) => <span className="text-sm text-surface-600">{subName(r.subCompanyId)}</span> }]
+      ? [{ key: 'subCompany', header: 'Sub Company', sortable: true, sortValue: (r: Holiday) => subName(r.subCompanyId), accessor: (r: Holiday) => <span className="text-sm text-surface-600">{subName(r.subCompanyId)}</span> }]
       : []),
-    { key: 'date', header: 'Date', sortable: true, accessor: (r) => formatDate(r.date, 'dd MMM yyyy (EEEE)'), width: '200px' },
-    { key: 'status', header: 'Status', accessor: (r) => <StatusBadge status={r.status} />, width: '100px' },
+    { key: 'date', header: 'Date', sortable: true, sortValue: (r) => r.date, accessor: (r) => formatDate(r.date, 'dd MMM yyyy (EEEE)'), width: '200px' },
+    { key: 'status', header: 'Status', sortable: true, sortValue: (r) => r.status, accessor: (r) => <StatusBadge status={r.status} />, width: '100px' },
     {
       key: 'actions', header: 'Actions', width: '90px',
       accessor: (row) => (

@@ -5,6 +5,7 @@ import { mockSubCompanies } from '@/mocks/data/subCompanies';
 import { mockShifts } from '@/mocks/data/shifts';
 import { sleep } from '@/lib/utils';
 import { logActivity } from './activityLog.service';
+import { sortRecords } from '@/lib/sort';
 
 // eslint-disable-next-line prefer-const
 let employees: Employee[] = [...mockEmployees];
@@ -40,6 +41,7 @@ export const employeeService = {
           e.department.toLowerCase().includes(q)
       );
     }
+    filtered = sortRecords(filtered, params?.sortBy, params?.sortDir, (e, key) => e[key as keyof Employee]);
     const page = params?.page ?? 1;
     const pageSize = params?.pageSize ?? 10;
     const start = (page - 1) * pageSize;

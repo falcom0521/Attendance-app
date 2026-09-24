@@ -4,6 +4,7 @@ import { mockActivityLogs } from '@/mocks/data/activityLogs';
 import { mockUsers } from '@/mocks/data/users';
 import { mockSubCompanies } from '@/mocks/data/subCompanies';
 import { sleep } from '@/lib/utils';
+import { sortRecords } from '@/lib/sort';
 
 /**
  * Mock-layer audit trail. In Phase 2 the backend records these server-side from the
@@ -76,19 +77,20 @@ export function logActivity(entry: LogEntry): void {
 
 function query(filters?: ActivityLogFilters): ActivityLog[] {
   const q = filters?.search?.toLowerCase();
-  return logs
-    .filter((l) => {
-      if (filters?.module && l.module !== filters.module) return false;
-      if (filters?.action && l.action !== filters.action) return false;
-      if (filters?.role && l.userRole !== filters.role) return false;
-      if (filters?.userId && l.userId !== filters.userId) return false;
-      if (filters?.companyId && l.companyId !== filters.companyId) return false;
-      if (filters?.startDate && l.date.slice(0, 10) < filters.startDate) return false;
-      if (filters?.endDate && l.date.slice(0, 10) > filters.endDate) return false;
-      if (q && !`${l.action} ${l.target} ${l.userName} ${l.details}`.toLowerCase().includes(q)) return false;
-      return true;
-    })
-    .sort((a, b) => b.date.localeCompare(a.date));
+  const filtered = logs.filter((l) => {
+    if (filters?.module && l.module !== filters.module) return false;
+    if (filters?.action && l.action !== filters.action) return false;
+    if (filters?.role && l.userRole !== filters.role) return false;
+    if (filters?.userId && l.userId !== filters.userId) return false;
+    if (filters?.companyId && l.companyId !== filters.companyId) return false;
+    if (filters?.startDate && l.date.slice(0, 10) < filters.startDate) return false;
+    if (filters?.endDate && l.date.slice(0, 10) > filters.endDate) return false;
+    if (q && !`${l.action} ${l.target} ${l.userName} ${l.details}`.toLowerCase().includes(q)) return false;
+    return true;
+  });
+  return filters?.sortBy
+    ? sortRecords(filtered, filters.sortBy, filters.sortDir, (l, key) => l[key as keyof ActivityLog])
+    : [...filtered].sort((a, b) => b.date.localeCompare(a.date));
 }
 
 export const activityLogService = {

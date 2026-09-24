@@ -28,7 +28,7 @@ export function ShiftsPage() {
 
   const columns: Column<Shift>[] = [
     {
-      key: 'name', header: 'Shift Name',
+      key: 'name', header: 'Shift Name', sortable: true, sortValue: (row) => row.name,
       accessor: (row) => (
         <div className="flex items-center gap-3">
           <div className="h-8 w-8 bg-orange-50 rounded-lg flex items-center justify-center flex-shrink-0">
@@ -42,13 +42,13 @@ export function ShiftsPage() {
       ),
     },
     ...(scope.showSubCompany
-      ? [{ key: 'subCompany', header: 'Sub Company', accessor: (r: Shift) => <span className="text-sm text-surface-600">{subName(r.subCompanyId)}</span> }]
+      ? [{ key: 'subCompany', header: 'Sub Company', sortable: true, sortValue: (r: Shift) => subName(r.subCompanyId), accessor: (r: Shift) => <span className="text-sm text-surface-600">{subName(r.subCompanyId)}</span> }]
       : []),
-    { key: 'startTime', header: 'Start Time', accessor: (r) => <span className="font-mono font-semibold text-surface-700">{r.startTime}</span>, width: '110px' },
-    { key: 'endTime', header: 'End Time', accessor: (r) => <span className="font-mono font-semibold text-surface-700">{r.endTime}</span>, width: '100px' },
+    { key: 'startTime', header: 'Start Time', sortable: true, sortValue: (r) => r.startTime, accessor: (r) => <span className="font-mono font-semibold text-surface-700">{r.startTime}</span>, width: '110px' },
+    { key: 'endTime', header: 'End Time', sortable: true, sortValue: (r) => r.endTime, accessor: (r) => <span className="font-mono font-semibold text-surface-700">{r.endTime}</span>, width: '100px' },
     { key: 'breakStartTime', header: 'Break', accessor: (r) => r.breakStartTime ? <span className="text-sm text-surface-500">{r.breakStartTime} – {r.breakEndTime}</span> : <span className="text-surface-300">—</span> },
-    { key: 'gracePeriodMinutes', header: 'Grace Period', accessor: (r) => <span className="text-sm">{r.gracePeriodMinutes} min</span>, width: '110px' },
-    { key: 'status', header: 'Status', accessor: (r) => <StatusBadge status={r.status} />, width: '100px' },
+    { key: 'gracePeriodMinutes', header: 'Grace Period', sortable: true, sortValue: (r) => r.gracePeriodMinutes, accessor: (r) => <span className="text-sm">{r.gracePeriodMinutes} min</span>, width: '110px' },
+    { key: 'status', header: 'Status', sortable: true, sortValue: (r) => r.status, accessor: (r) => <StatusBadge status={r.status} />, width: '100px' },
     {
       key: 'actions', header: 'Actions', width: '110px',
       accessor: (row) => (

@@ -8,6 +8,7 @@ import { getEmployeesSnapshot } from './employee.service';
 import { getDevicesSnapshot } from './device.service';
 import { getUsersSnapshot } from './user.service';
 import { logActivity } from './activityLog.service';
+import { sortRecords } from '@/lib/sort';
 
 // eslint-disable-next-line prefer-const
 let companies: Company[] = [...mockCompanies];
@@ -56,6 +57,7 @@ export const companyService = {
     if (params?.status) {
       filtered = filtered.filter((c) => c.status === params.status);
     }
+    filtered = sortRecords(filtered, params?.sortBy, params?.sortDir, (c, key) => c[key as keyof Company]);
     const page = params?.page ?? 1;
     const pageSize = params?.pageSize ?? 10;
     const start = (page - 1) * pageSize;
@@ -126,6 +128,7 @@ export const companyService = {
     if (params?.status) {
       filtered = filtered.filter((sc) => sc.status === params.status);
     }
+    filtered = sortRecords(filtered, params?.sortBy, params?.sortDir, (sc, key) => sc[key as keyof SubCompany]);
     const page = params?.page ?? 1;
     const pageSize = params?.pageSize ?? 10;
     const start = (page - 1) * pageSize;
