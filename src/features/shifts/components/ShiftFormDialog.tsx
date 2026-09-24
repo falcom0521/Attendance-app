@@ -12,7 +12,7 @@ import { useAuthStore } from '@/store/authStore';
 import { useSubCompanyScope } from '@/hooks/useSubCompanyScope';
 import { useAttendanceSettings } from '@/features/configuration/hooks/useAttendanceSettings';
 import type { Shift } from '@/types/shift';
-import { requiredText, timeField, optionalTimeField, intInRange } from '@/lib/validation';
+import { requiredText, timeField, optionalTimeField, intInRange, optionalIntInRange } from '@/lib/validation';
 
 const schema = z
   .object({
@@ -22,6 +22,7 @@ const schema = z
     breakStartTime: optionalTimeField('Break start'),
     breakEndTime: optionalTimeField('Break end'),
     gracePeriodMinutes: intInRange('Grace period', 0, 60),
+    minimumWorkingHours: optionalIntInRange('Minimum working hours', 1, 24),
     status: z.enum(['ACTIVE', 'INACTIVE']),
     subCompanyId: z.string().min(1, 'Select a sub company'),
   })
@@ -101,6 +102,22 @@ export function ShiftFormDialog({ open, onClose, shift }: { open: boolean; onClo
           <Input label="Break End" type="time" error={errors.breakEndTime?.message} {...register('breakEndTime')} />
         </div>
         <Input label="Grace Period (minutes)" type="number" error={errors.gracePeriodMinutes?.message} {...register('gracePeriodMinutes', { valueAsNumber: true })} />
+        <Input
+          label="Minimum Working Hours"
+          type="number"
+          inputMode="numeric"
+          min={1}
+          max={24}
+          step={1}
+          placeholder="e.g. 8"
+          error={errors.minimumWorkingHours?.message}
+          hint={
+            settings?.minimumWorkingHoursEnabled
+              ? 'Optional. Employee is Present once they complete these hours that day, regardless of arrival/departure time.'
+              : 'Optional. Takes effect only once Flexible Timing is enabled in Attendance Settings.'
+          }
+          {...register('minimumWorkingHours', { valueAsNumber: true })}
+        />
         <Select label="Status" required options={[{ label: 'Active', value: 'ACTIVE' }, { label: 'Inactive', value: 'INACTIVE' }]} error={errors.status?.message} {...register('status')} />
       </form>
     </Dialog>

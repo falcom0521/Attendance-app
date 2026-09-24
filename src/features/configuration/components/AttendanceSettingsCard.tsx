@@ -10,12 +10,12 @@ import { useToast } from '@/components/feedback/ToastContext';
 import { useAuthStore } from '@/store/authStore';
 import { useAttendanceSettings, useUpdateAttendanceSettings } from '../hooks/useAttendanceSettings';
 import { DEFAULT_ATTENDANCE_SETTINGS } from '@/services/mock/settings.service';
-import { intInRange, timeField } from '@/lib/validation';
+import { intInRange } from '@/lib/validation';
 
 const schema = z.object({
   lateGracePeriodMinutes: intInRange('Late grace period', 0, 120),
   earlyOutThresholdMinutes: intInRange('Early-out threshold', 0, 120),
-  minimumWorkingHours: timeField('Minimum working hours'),
+  minimumWorkingHoursEnabled: z.boolean(),
   overtimeThresholdMinutes: intInRange('Overtime threshold', 0, 240),
   overtimeEnabled: z.boolean(),
   autoAbsent: z.boolean(),
@@ -38,6 +38,7 @@ export function AttendanceSettingsCard() {
   });
   const overtimeEnabled = watch('overtimeEnabled');
   const autoAbsent = watch('autoAbsent');
+  const minimumWorkingHoursEnabled = watch('minimumWorkingHoursEnabled');
 
   useEffect(() => {
     if (data) reset(data);
@@ -47,7 +48,12 @@ export function AttendanceSettingsCard() {
     try {
       await update.mutateAsync(values);
       reset(values);
-      toast.success('Attendance settings saved', 'Late, early-out and overtime are recalculated');
+      toast.success(
+        'Attendance settings saved',
+        values.minimumWorkingHoursEnabled
+          ? 'Flexible timing is on — status now follows hours completed, not arrival/departure time'
+          : 'Late, early-out and overtime are recalculated'
+      );
     } catch {
       toast.error('Failed to save settings');
     }
@@ -86,15 +92,6 @@ export function AttendanceSettingsCard() {
               {...register('earlyOutThresholdMinutes', { valueAsNumber: true })}
             />
             <Input
-              label="Minimum Working Hours (HH:MM)"
-              type="time"
-              required
-              readOnly={isLoading}
-              hint="Minimum hours for PRESENT status"
-              error={errors.minimumWorkingHours?.message}
-              {...register('minimumWorkingHours')}
-            />
-            <Input
               label="Overtime Threshold (minutes)"
               type="number"
               inputMode="numeric"
@@ -110,6 +107,21 @@ export function AttendanceSettingsCard() {
               {...register('overtimeThresholdMinutes', { valueAsNumber: true })}
             />
           </div>
+
+          <div className="pt-4 border-t border-surface-100">
+            <Switch
+              checked={minimumWorkingHoursEnabled}
+              onChange={(v) => setValue('minimumWorkingHoursEnabled', v, { shouldDirty: true })}
+              label="Enable Flexible Timing (Minimum Working Hours)"
+            />
+            <p className="mt-1.5 text-xs text-surface-500 max-w-lg">
+              Optional. When on, arrival and departure time no longer decide Late / Early Out for any shift
+              with a minimum working hours value — an employee is marked Present as soon as they complete
+              that many hours that day, whenever they punch in and out. Set the minimum hours per shift
+              under Configuration → Shifts; shifts left blank keep the usual start/end-time rules.
+            </p>
+          </div>
+
           <div className="flex flex-col items-start gap-4 pt-4 border-t border-surface-100">
             <Switch checked={overtimeEnabled} onChange={(v) => setValue('overtimeEnabled', v, { shouldDirty: true })} label="Enable Overtime Tracking" />
             <Switch checked={autoAbsent} onChange={(v) => setValue('autoAbsent', v, { shouldDirty: true })} label="Auto-mark absent after midnight" />

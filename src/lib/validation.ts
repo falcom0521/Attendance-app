@@ -114,6 +114,14 @@ export function intInRange(label: string, min: number, max: number) {
     .max(max, `${label} must be ${max} or less`);
 }
 
+/** Optional whole number within [min, max]; blank/undefined is allowed. Use with `register(name, { valueAsNumber: true })`. */
+export function optionalIntInRange(label: string, min: number, max: number) {
+  return z
+    .union([z.nan(), intInRange(label, min, max)])
+    .optional()
+    .transform((v) => (v === undefined || Number.isNaN(v) ? undefined : v));
+}
+
 // ── Dates & times ───────────────────────────────────────────────────────────
 const isRealDate = (v: string) => /^\d{4}-\d{2}-\d{2}$/.test(v) && isValid(parseISO(v));
 

@@ -103,6 +103,10 @@ export function getAllAttendanceRecords(): AttendanceRecord[] {
         id: existing?.id,
         leaveType: leave.leaveType,
         leaveRequestId: leave.requestId,
+        leaveSource: leave.source,
+        leaveReason: leave.reason,
+        leaveMarkedBy: leave.markedBy,
+        leaveMarkedAt: leave.markedAt,
       })
     );
   }

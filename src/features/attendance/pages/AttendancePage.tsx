@@ -1,7 +1,7 @@
-import { useState } from 'react';
-import { Clock, Users, XCircle, AlertTriangle, LogOut, Eye, CalendarDays, Plus, Timer } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Clock, Users, XCircle, AlertTriangle, LogOut, Eye, CalendarDays, Plus, Timer, CalendarCheck } from 'lucide-react';
 // ClipboardCheck  — used by the disabled Requests button below
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { PageHeader } from '@/components/common/PageHeader';
 import { StatCard } from '@/components/ui/StatCard';
 import { Card, CardHeader, CardBody } from '@/components/ui/Card';
@@ -23,7 +23,8 @@ import { hasPermission } from '@/utils/permissions';
 // import { useRequests } from '@/features/requests/hooks/useRequests';
 import { formatDate, formatTime, minutesToDisplay, todayISO } from '@/utils/date';
 import { ManualAttendanceDialog } from '../components/ManualAttendanceDialog';
-import type { AttendanceStatus } from '@/types/attendance';
+import { MarkLeaveDialog } from '../components/MarkLeaveDialog';
+import type { AttendanceRecord, AttendanceStatus } from '@/types/attendance';
 
 const STATUS_OPTIONS = [
   { label: 'All Status', value: '' },
@@ -36,17 +37,30 @@ const STATUS_OPTIONS = [
   { label: 'Weekly Off', value: 'WEEKLY_OFF' },
 ];
 
+const VALID_STATUSES = new Set(STATUS_OPTIONS.map((o) => o.value).filter(Boolean));
+
 export function AttendancePage() {
   const { user } = useAuthStore();
   const scope = useSubCompanyScope();
   const navigate = useNavigate();
-  const [date, setDate] = useState(todayISO());
+  const [searchParams, setSearchParams] = useSearchParams();
+  // Dashboard KPI cards link here with a status (and date) pre-applied — read it once on
+  // arrival, then drop it from the URL so it doesn't linger while the user changes filters.
+  const initialStatus = searchParams.get('status') ?? '';
+  const initialDate = searchParams.get('date') ?? '';
+  const [date, setDate] = useState(() => (initialDate && initialDate <= todayISO() ? initialDate : todayISO()));
   const [search, setSearch] = useState('');
-  const [status, setStatus] = useState('');
+  const [status, setStatus] = useState(() => (VALID_STATUSES.has(initialStatus) ? initialStatus : ''));
   const [department, setDepartment] = useState('');
   const [page, setPage] = useState(1);
   const [manualOpen, setManualOpen] = useState(false);
+  const [leaveTarget, setLeaveTarget] = useState<AttendanceRecord | null>(null);
   const PAGE_SIZE = 10;
+
+  useEffect(() => {
+    if (searchParams.has('status') || searchParams.has('date')) setSearchParams({}, { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const { data: departments = [] } = useDepartments(user?.companyId);
   const deptOptions = [
@@ -208,12 +222,24 @@ export function AttendancePage() {
                           </div>
                         </td>
                         <td className="table-td">
-                          <button
-                            onClick={() => navigate(`${basePath}/attendance/${r.employeeId}?date=${date}`)}
-                            className="p-1.5 rounded-lg text-surface-400 hover:text-brand-600 hover:bg-brand-50 transition-colors"
-                          >
-                            <Eye className="h-4 w-4" />
-                          </button>
+                          <div className="flex items-center gap-1">
+                            <button
+                              onClick={() => navigate(`${basePath}/attendance/${r.employeeId}?date=${date}`)}
+                              className="p-1.5 rounded-lg text-surface-400 hover:text-brand-600 hover:bg-brand-50 transition-colors"
+                              title="View details"
+                            >
+                              <Eye className="h-4 w-4" />
+                            </button>
+                            {canManage && r.status === 'ABSENT' && date <= todayISO() && (
+                              <button
+                                onClick={() => setLeaveTarget(r)}
+                                className="p-1.5 rounded-lg text-surface-400 hover:text-brand-600 hover:bg-brand-50 transition-colors"
+                                title="Mark as leave"
+                              >
+                                <CalendarCheck className="h-4 w-4" />
+                              </button>
+                            )}
+                          </div>
                         </td>
                       </tr>
                     ))}
@@ -236,6 +262,15 @@ export function AttendancePage() {
         <ManualAttendanceDialog
           open={manualOpen}
           onClose={() => setManualOpen(false)}
+        />
+      )}
+      {leaveTarget && (
+        <MarkLeaveDialog
+          open
+          onClose={() => setLeaveTarget(null)}
+          employeeId={leaveTarget.employeeId}
+          employeeName={leaveTarget.employeeName}
+          date={date}
         />
       )}
     </div>

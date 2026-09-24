@@ -83,6 +83,10 @@ function apply(request: AttendanceRequest, reviewerName: string): void {
         date,
         leaveType: request.leaveType ?? 'CASUAL',
         requestId: request.id,
+        source: 'REQUEST',
+        reason: request.reason,
+        markedBy: reviewerName,
+        markedAt: new Date().toISOString(),
       });
     }
     return;

@@ -111,6 +111,8 @@ export function buildAttendanceRecord(args: {
     earlyOutThresholdMinutes: settings.earlyOutThresholdMinutes,
     overtimeEnabled: settings.overtimeEnabled,
     overtimeThresholdMinutes: settings.overtimeThresholdMinutes,
+    minimumWorkingHoursEnabled: settings.minimumWorkingHoursEnabled,
+    minimumWorkMinutes: settings.minimumWorkingHoursEnabled ? (shift.minimumWorkingHours ?? 0) * 60 : 0,
   });
 
   return {

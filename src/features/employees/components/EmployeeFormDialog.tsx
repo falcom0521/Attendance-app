@@ -29,7 +29,7 @@ const schema = z.object({
   joiningDate: dateWithinFuture('Joining date', 90),
   status: z.enum(['ACTIVE', 'INACTIVE']),
   subCompanyId: z.string().min(1, 'Select a sub company'),
-  shiftId: z.string().optional(),
+  shiftId: z.string().min(1, 'Select a shift'),
 })
   .superRefine((v, ctx) => {
     // Cross-field: joining after birth, and old enough on the joining date.
@@ -67,10 +67,12 @@ export function EmployeeFormDialog({ open, onClose, employee }: { open: boolean;
     defaultValues: { status: 'ACTIVE', employeeType: 'FULL_TIME', subCompanyId: scope.subCompanyId ?? '' },
   });
 
-  // Shifts belong to a sub company, so the shift list follows the selected sub company.
+  // Shifts belong to a sub company, so the shift list follows the selected sub company. A shift is
+  // now required on every employee, so only ACTIVE shifts are offered.
   const selectedSub = watch('subCompanyId');
   const { data: shifts } = useShifts(selectedSub || undefined, scope.companyId);
-  const shiftOptions = [{ label: 'No Shift', value: '' }, ...(shifts ?? []).map((s) => ({ label: s.name, value: s.id }))];
+  const activeShifts = (shifts ?? []).filter((s) => s.status === 'ACTIVE');
+  const shiftOptions = [{ label: 'Select shift', value: '' }, ...activeShifts.map((s) => ({ label: `${s.name} (${s.startTime}–${s.endTime})`, value: s.id }))];
   const subOptions = [{ label: 'Select sub company', value: '' }, ...scope.subCompanies.map((sc) => ({ label: sc.name, value: sc.id }))];
 
   useEffect(() => {
@@ -135,7 +137,14 @@ export function EmployeeFormDialog({ open, onClose, employee }: { open: boolean;
             <Select label="Employee Type" required options={TYPE_OPTIONS} error={errors.employeeType?.message} {...register('employeeType')} />
             <Input label="Joining Date" type="date" required error={errors.joiningDate?.message} {...register('joiningDate', { deps: ['dateOfBirth'] })} />
             <Select label="Status" required options={[{ label: 'Active', value: 'ACTIVE' }, { label: 'Inactive', value: 'INACTIVE' }]} error={errors.status?.message} {...register('status')} />
-            <Select label="Assigned Shift" options={shiftOptions} error={errors.shiftId?.message} {...register('shiftId')} />
+            <div>
+              <Select label="Assigned Shift" required options={shiftOptions} error={errors.shiftId?.message} {...register('shiftId')} />
+              {selectedSub && activeShifts.length === 0 && (
+                <p className="form-hint text-warning-600">
+                  This sub company has no active shifts yet — add one under Configuration → Shifts first.
+                </p>
+              )}
+            </div>
           </div>
         </div>
       </form>

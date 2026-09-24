@@ -61,9 +61,14 @@ export interface AttendanceRecord {
   manualSource?: ManualSource;
   manualBy?: string;
   manualAt?: string;
-  /** Set when the day is covered by an approved leave request. */
+  /** Set when the day is covered by approved leave (a request, or a direct pre-approved mark). */
   leaveType?: string;
   leaveRequestId?: string;
+  /** `'DIRECT'` = marked pre-approved straight from Attendance; `'REQUEST'` = via an approved request. */
+  leaveSource?: 'DIRECT' | 'REQUEST';
+  leaveReason?: string;
+  leaveMarkedBy?: string;
+  leaveMarkedAt?: string;
 }
 
 export interface MonthlyAttendanceSummary {

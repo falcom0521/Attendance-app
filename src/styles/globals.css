@@ -7,19 +7,23 @@
 @layer base {
   /* Colour tokens: light values in :root, dark values in .dark (toggled on <html>). */
   :root {
+      /* A custom cool-neutral scale (not stock Tailwind slate) so the canvas reads as a
+         distinct layer behind white cards/sidebar/topbar instead of everything blending
+         into one flat white — the same depth the dark theme already gets for free from
+         being near-black. */
       --c-surface-0: 255 255 255;
-      --c-surface-50: 248 250 252;
-      --c-surface-100: 241 245 249;
-      --c-surface-200: 226 232 240;
-      --c-surface-300: 203 213 225;
-      --c-surface-400: 148 163 184;
-      --c-surface-500: 100 116 139;
-      --c-surface-600: 71 85 105;
-      --c-surface-700: 51 65 85;
-      --c-surface-800: 30 41 59;
-      --c-surface-900: 15 23 42;
-      --c-surface-950: 2 6 23;
-      --c-brand-50: 239 246 255;
+      --c-surface-50: 243 245 249;
+      --c-surface-100: 235 238 244;
+      --c-surface-200: 222 227 235;
+      --c-surface-300: 200 207 219;
+      --c-surface-400: 144 154 172;
+      --c-surface-500: 98 109 128;
+      --c-surface-600: 71 81 99;
+      --c-surface-700: 50 59 75;
+      --c-surface-800: 29 36 50;
+      --c-surface-900: 16 21 32;
+      --c-surface-950: 7 10 18;
+      --c-brand-50: 224 235 255;
       --c-brand-100: 219 234 254;
       --c-brand-200: 191 219 254;
       --c-brand-300: 147 197 253;
@@ -30,21 +34,21 @@
       --c-brand-800: 30 64 175;
       --c-brand-900: 30 58 138;
       --c-brand-950: 23 37 84;
-      --c-success-50: 240 253 244;
+      --c-success-50: 216 248 229;
       --c-success-100: 220 252 231;
       --c-success-200: 187 247 208;
       --c-success-500: 34 197 94;
       --c-success-600: 22 163 74;
       --c-success-700: 21 128 61;
       --c-success-800: 22 101 52;
-      --c-warning-50: 255 251 235;
+      --c-warning-50: 254 240 205;
       --c-warning-100: 254 243 199;
       --c-warning-200: 253 230 138;
       --c-warning-500: 245 158 11;
       --c-warning-600: 217 119 6;
       --c-warning-700: 180 83 9;
       --c-warning-800: 146 64 14;
-      --c-danger-50: 254 242 242;
+      --c-danger-50: 254 234 234;
       --c-danger-100: 254 226 226;
       --c-danger-200: 254 202 202;
       --c-danger-400: 248 113 113;
@@ -52,32 +56,32 @@
       --c-danger-600: 220 38 38;
       --c-danger-700: 185 28 28;
       --c-danger-800: 153 27 27;
-      --c-info-50: 239 246 255;
+      --c-info-50: 224 235 255;
       --c-info-100: 219 234 254;
       --c-info-200: 191 219 254;
       --c-info-500: 59 130 246;
       --c-info-600: 37 99 235;
       --c-info-700: 29 78 216;
-      --c-purple-50: 250 245 255;
+      --c-purple-50: 238 226 255;
       --c-purple-100: 243 232 255;
       --c-purple-200: 233 213 255;
       --c-purple-600: 147 51 234;
       --c-purple-700: 126 34 206;
-      --c-orange-50: 255 247 237;
+      --c-orange-50: 255 230 205;
       --c-orange-100: 255 237 213;
       --c-orange-200: 254 215 170;
       --c-orange-600: 234 88 12;
       --c-orange-700: 194 65 12;
       --c-orange-800: 154 52 18;
-      --c-cyan-50: 236 254 255;
+      --c-cyan-50: 210 249 253;
       --c-cyan-100: 207 250 254;
       --c-cyan-600: 8 145 178;
       --c-cyan-700: 14 116 144;
-      --c-violet-50: 245 243 255;
+      --c-violet-50: 232 223 255;
       --c-violet-600: 124 58 237;
-      --c-pink-100: 252 231 243;
+      --c-pink-100: 250 214 232;
       --c-pink-700: 190 24 93;
-      --c-indigo-50: 238 242 255;
+      --c-indigo-50: 219 226 255;
       --c-indigo-600: 79 70 229;
       --c-card: 255 255 255;
       color-scheme: light;

@@ -8,16 +8,11 @@ interface DepartmentAttendanceChartProps {
   data: DepartmentRow[];
 }
 
-const DEPT_COLORS = [
-  '#3b82f6', // brand blue
-  '#22c55e', // green
-  '#f59e0b', // amber
-  '#8b5cf6', // violet
-  '#06b6d4', // cyan
-  '#ec4899', // pink
-  '#f97316', // orange
-  '#10b981', // emerald
-];
+/** One accent hue, shaded by attendance rate — a ranked list reads calmer in a single colour family than a rainbow per row. */
+function barColor(pct: number): string {
+  const alpha = 0.45 + (Math.max(0, Math.min(100, pct)) / 100) * 0.55;
+  return `rgb(var(--c-brand-600) / ${alpha.toFixed(2)})`;
+}
 
 export function DepartmentAttendanceChart({ data }: DepartmentAttendanceChartProps) {
   if (!data.length) {
@@ -35,31 +30,24 @@ export function DepartmentAttendanceChart({ data }: DepartmentAttendanceChartPro
 
   return (
     <div className="space-y-3.5">
-      {sorted.map((row, i) => {
+      {sorted.map((row) => {
         const pct = row.total > 0 ? Math.round((row.present / row.total) * 100) : 0;
-        const color = DEPT_COLORS[i % DEPT_COLORS.length] ?? '#3b82f6';
+        const color = barColor(pct);
 
         return (
           <div key={row.dept}>
             {/* Label row */}
             <div className="flex items-center justify-between mb-1.5">
-              <div className="flex items-center gap-2 min-w-0">
-                <span
-                  className="h-2 w-2 rounded-full flex-shrink-0"
-                  style={{ backgroundColor: color }}
-                />
+              <div className="min-w-0">
                 <span className="text-sm font-medium text-surface-800 truncate">{row.dept}</span>
               </div>
               <div className="flex items-center gap-3 flex-shrink-0 ml-3">
                 <span className="text-xs text-surface-400">
-                  <span className="font-semibold text-success-600">{row.present}</span>
+                  <span className="font-semibold text-surface-600">{row.present}</span>
                   <span className="mx-1 text-surface-300">/</span>
                   {row.total}
                 </span>
-                <span
-                  className="text-xs font-bold tabular-nums w-9 text-right"
-                  style={{ color }}
-                >
+                <span className="text-xs font-bold tabular-nums w-9 text-right text-surface-700">
                   {pct}%
                 </span>
               </div>

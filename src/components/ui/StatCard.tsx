@@ -10,16 +10,22 @@ interface StatCardProps {
   color?: 'blue' | 'green' | 'red' | 'yellow' | 'purple' | 'cyan' | 'orange';
   className?: string;
   loading?: boolean;
+  /** Makes the card an interactive button (e.g. jump to the filtered list behind this number). */
+  onClick?: () => void;
 }
 
+// A restrained, semantic palette: colour is reserved for metrics where it carries meaning
+// (good / bad / needs attention / primary count). Everything else — headcounts, device
+// counts, secondary totals — shares one neutral slate tone instead of a different hue each,
+// which keeps a row of KPI cards from reading as a rainbow.
 const colorConfig = {
-  blue: { icon: 'bg-brand-50 text-brand-600', value: 'text-surface-900' },
-  green: { icon: 'bg-success-50 text-success-600', value: 'text-success-700' },
-  red: { icon: 'bg-danger-50 text-danger-600', value: 'text-danger-700' },
-  yellow: { icon: 'bg-warning-50 text-warning-600', value: 'text-warning-700' },
-  purple: { icon: 'bg-purple-50 text-purple-600', value: 'text-purple-700' },
-  cyan: { icon: 'bg-cyan-50 text-cyan-600', value: 'text-cyan-700' },
-  orange: { icon: 'bg-orange-50 text-orange-600', value: 'text-orange-700' },
+  blue: { icon: 'bg-brand-50 text-brand-600' },
+  green: { icon: 'bg-success-50 text-success-600' },
+  red: { icon: 'bg-danger-50 text-danger-600' },
+  yellow: { icon: 'bg-warning-50 text-warning-600' },
+  purple: { icon: 'bg-surface-100 text-surface-500' },
+  cyan: { icon: 'bg-surface-100 text-surface-500' },
+  orange: { icon: 'bg-surface-100 text-surface-500' },
 };
 
 export function StatCard({
@@ -31,6 +37,7 @@ export function StatCard({
   color = 'blue',
   className,
   loading = false,
+  onClick,
 }: StatCardProps) {
   const colors = colorConfig[color];
   const isPositive = trend && trend.value >= 0;
@@ -50,12 +57,22 @@ export function StatCard({
     );
   }
 
+  const Container = onClick ? 'button' : 'div';
+
   return (
-    <div className={cn('card p-5 hover:shadow-soft transition-shadow duration-200', className)}>
+    <Container
+      type={onClick ? 'button' : undefined}
+      onClick={onClick}
+      className={cn(
+        'card p-5 w-full text-left hover:border-surface-300 transition-colors duration-200',
+        onClick && 'cursor-pointer hover:shadow-soft-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/40',
+        className
+      )}
+    >
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0 flex-1">
           <p className="text-sm font-medium text-surface-500 truncate">{title}</p>
-          <p className={cn('text-2xl font-bold mt-1', colors.value)}>{value}</p>
+          <p className="text-2xl font-bold mt-1 text-surface-900 tabular-nums">{value}</p>
           <div className="flex items-center gap-2 mt-1.5">
             {trend !== undefined && (
               <span
@@ -76,11 +93,11 @@ export function StatCard({
           </div>
         </div>
         {icon && (
-          <div className={cn('flex-shrink-0 p-2.5 rounded-xl', colors.icon)}>
+          <div className={cn('flex-shrink-0 p-2.5 rounded-lg', colors.icon)}>
             {icon}
           </div>
         )}
       </div>
-    </div>
+    </Container>
   );
 }

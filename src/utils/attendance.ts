@@ -12,6 +12,11 @@ export interface AttendanceCalculationInput {
   weeklyOff: string[]; // e.g. ['SATURDAY', 'SUNDAY']
   lateGracePeriodMinutes?: number;
   earlyOutThresholdMinutes?: number;
+  /**
+   * "Flexible timing": when true, arrival/departure clock times are ignored for status — the day is
+   * PRESENT once `minimumWorkMinutes` of work is completed, EARLY_OUT (hours short) otherwise.
+   */
+  minimumWorkingHoursEnabled?: boolean;
   minimumWorkMinutes?: number;
   overtimeEnabled?: boolean;
   /** Minutes worked after shift end before overtime starts counting. */
@@ -38,6 +43,8 @@ export function calculateAttendance(input: AttendanceCalculationInput): Attendan
     earlyOutThresholdMinutes = 15,
     overtimeEnabled = true,
     overtimeThresholdMinutes = 0,
+    minimumWorkingHoursEnabled = false,
+    minimumWorkMinutes = 0,
   } = input;
 
   const parsedDate = parseISO(date);
@@ -119,7 +126,7 @@ export function calculateAttendance(input: AttendanceCalculationInput): Attendan
 
   // Early out calculation
   const lastOutTime = lastOut ? parseISO(lastOut.punchTime) : null;
-  const earlyOutMinutes = lastOutTime
+  const shiftEarlyOutMinutes = lastOutTime
     ? Math.max(0, differenceInMinutes(shiftEndTime, lastOutTime) - earlyOutThresholdMinutes)
     : 0;
 
@@ -131,14 +138,24 @@ export function calculateAttendance(input: AttendanceCalculationInput): Attendan
       ? minutesPastShiftEnd
       : 0;
 
-  // Determine status
-  let status: AttendanceStatus = 'PRESENT';
-  if (lateMinutes > 0 && earlyOutMinutes > 0) {
-    status = 'LATE';
+  let finalLateMinutes = lateMinutes;
+  let earlyOutMinutes = shiftEarlyOutMinutes;
+  let status: AttendanceStatus;
+
+  if (minimumWorkingHoursEnabled && minimumWorkMinutes > 0) {
+    // Flexible timing: arrival and departure against the shift no longer decide the status — only
+    // whether the employee put in the required number of minutes that day. Late/early figures against
+    // the shift are not meaningful here, so they're zeroed; `earlyOutMinutes` instead carries the
+    // shortfall against the minimum, which is what the UI's "Early Out" column shows for this day.
+    finalLateMinutes = 0;
+    earlyOutMinutes = Math.max(0, minimumWorkMinutes - workingMinutes);
+    status = earlyOutMinutes > 0 ? 'EARLY_OUT' : 'PRESENT';
   } else if (lateMinutes > 0) {
     status = 'LATE';
-  } else if (earlyOutMinutes > 0) {
+  } else if (shiftEarlyOutMinutes > 0) {
     status = 'EARLY_OUT';
+  } else {
+    status = 'PRESENT';
   }
 
   return {
@@ -146,7 +163,7 @@ export function calculateAttendance(input: AttendanceCalculationInput): Attendan
     lastPunchOut: lastOut?.punchTime,
     workingMinutes,
     breakMinutes,
-    lateMinutes,
+    lateMinutes: finalLateMinutes,
     earlyOutMinutes,
     overtimeMinutes,
     status,

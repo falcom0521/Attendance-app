@@ -12,4 +12,6 @@ export { manualAttendanceService } from './manualAttendance.service';
 export { activityLogService } from './activityLog.service';
 export { requestService } from './request.service';
 export { settingsService } from './settings.service';
+export { leaveMarkService } from './leaveMark.service';
 export type { ManualAttendancePayload, ManualPunchEntry } from './manualAttendance.service';
+export type { MarkLeavePayload } from './leaveMark.service';

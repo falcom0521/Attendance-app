@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { attendanceService, manualAttendanceService } from '@/services/mock';
+import { attendanceService, manualAttendanceService, leaveMarkService } from '@/services/mock';
 import type { AttendanceFilters } from '@/types/attendance';
-import type { ManualAttendancePayload } from '@/services/mock';
+import type { ManualAttendancePayload, MarkLeavePayload } from '@/services/mock';
 
 export const attendanceKeys = {
   all: ['attendance'] as const,
@@ -69,6 +69,25 @@ export function useDeleteManualAttendance() {
   return useMutation({
     mutationFn: ({ employeeId, date }: { employeeId: string; date: string }) =>
       manualAttendanceService.deleteManualAttendance(employeeId, date),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: attendanceKeys.all }); },
+  });
+}
+
+/** Flags an ABSENT day as pre-approved leave, no separate approval step. */
+export function useMarkPreApprovedLeave() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: MarkLeavePayload) => leaveMarkService.markPreApprovedLeave(payload),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: attendanceKeys.all }); },
+  });
+}
+
+/** Undoes a direct leave mark; the day reverts to Absent. */
+export function useRemoveLeaveMark() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ employeeId, date }: { employeeId: string; date: string }) =>
+      leaveMarkService.removeLeaveMark(employeeId, date),
     onSuccess: () => { qc.invalidateQueries({ queryKey: attendanceKeys.all }); },
   });
 }

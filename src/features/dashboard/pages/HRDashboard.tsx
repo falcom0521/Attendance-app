@@ -1,4 +1,5 @@
 import { Users, Clock, XCircle, AlertTriangle, LogOut } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { StatCard } from '@/components/ui/StatCard';
 import { Card, CardHeader, CardBody } from '@/components/ui/Card';
 import { StatusBadge } from '@/components/ui/Badge';
@@ -9,11 +10,18 @@ import { PageHeader } from '@/components/common/PageHeader';
 import { CardSkeleton } from '@/components/ui/Skeleton';
 import { useHRDashboard } from '../hooks/useDashboard';
 import { useAuthStore } from '@/store/authStore';
-import { formatTime, minutesToDisplay } from '@/utils/date';
+import { formatTime, minutesToDisplay, todayISO } from '@/utils/date';
 
 export function HRDashboard() {
   const { user } = useAuthStore();
+  const navigate = useNavigate();
   const { data, isLoading } = useHRDashboard(user?.subCompanyId ?? '');
+
+  const toAttendance = (status?: string) => {
+    const params = new URLSearchParams({ date: todayISO() });
+    if (status) params.set('status', status);
+    navigate(`/hr/attendance?${params.toString()}`);
+  };
 
   return (
     <div className="page-container">
@@ -39,6 +47,7 @@ export function HRDashboard() {
               icon={<Users className="h-4 w-4" />}
               color="blue"
               subtitle="Active employees"
+              onClick={() => toAttendance()}
             />
             <StatCard
               title="Present"
@@ -46,6 +55,7 @@ export function HRDashboard() {
               icon={<Clock className="h-4 w-4" />}
               color="green"
               subtitle="On time + late"
+              onClick={() => toAttendance('PRESENT')}
             />
             <StatCard
               title="Absent"
@@ -53,6 +63,7 @@ export function HRDashboard() {
               icon={<XCircle className="h-4 w-4" />}
               color="red"
               subtitle="No punch today"
+              onClick={() => toAttendance('ABSENT')}
             />
             <StatCard
               title="Late"
@@ -60,6 +71,7 @@ export function HRDashboard() {
               icon={<AlertTriangle className="h-4 w-4" />}
               color="yellow"
               subtitle="Past grace period"
+              onClick={() => toAttendance('LATE')}
             />
             <StatCard
               title="Early Out"
@@ -67,6 +79,7 @@ export function HRDashboard() {
               icon={<LogOut className="h-4 w-4" />}
               color="orange"
               subtitle="Left before shift end"
+              onClick={() => toAttendance('EARLY_OUT')}
             />
           </>
         )}

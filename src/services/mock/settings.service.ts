@@ -5,7 +5,7 @@ import { logActivity } from './activityLog.service';
 export const DEFAULT_ATTENDANCE_SETTINGS: AttendanceSettings = {
   lateGracePeriodMinutes: 15,
   earlyOutThresholdMinutes: 15,
-  minimumWorkingHours: '07:00',
+  minimumWorkingHoursEnabled: false,
   overtimeThresholdMinutes: 30,
   overtimeEnabled: true,
   autoAbsent: false,
@@ -30,7 +30,7 @@ export const settingsService = {
   ): Promise<AttendanceSettings> {
     await sleep(400);
     settingsByCompany.set(companyId, { ...payload });
-    logActivity({ action: 'UPDATED', module: 'Configuration', target: 'Attendance Settings', details: `Grace ${payload.lateGracePeriodMinutes}m · early-out ${payload.earlyOutThresholdMinutes}m · overtime ${payload.overtimeEnabled ? `after ${payload.overtimeThresholdMinutes}m` : 'off'}`, companyId });
+    logActivity({ action: 'UPDATED', module: 'Configuration', target: 'Attendance Settings', details: `Grace ${payload.lateGracePeriodMinutes}m · early-out ${payload.earlyOutThresholdMinutes}m · overtime ${payload.overtimeEnabled ? `after ${payload.overtimeThresholdMinutes}m` : 'off'} · flexible timing ${payload.minimumWorkingHoursEnabled ? 'on' : 'off'}`, companyId });
     return payload;
   },
 };

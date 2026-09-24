@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Clock, LogIn, LogOut, AlertTriangle, CheckCircle, Timer, Pencil, Plus, Trash2 } from 'lucide-react';
+import { ArrowLeft, Clock, LogIn, LogOut, AlertTriangle, CheckCircle, Timer, Pencil, Plus, Trash2, CalendarCheck, CalendarX } from 'lucide-react';
 // FileWarning, PenLine  — used by the disabled request buttons below
 import { Button } from '@/components/ui/Button';
 import { Card, CardHeader, CardBody } from '@/components/ui/Card';
@@ -9,8 +9,9 @@ import { Avatar } from '@/components/ui/Avatar';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { ConfirmDialog } from '@/components/ui/Dialog';
 import { useToast } from '@/components/feedback/ToastContext';
-import { useAttendanceRecord, useDeleteManualAttendance } from '../hooks/useAttendance';
+import { useAttendanceRecord, useDeleteManualAttendance, useRemoveLeaveMark } from '../hooks/useAttendance';
 import { ManualAttendanceDialog } from '../components/ManualAttendanceDialog';
+import { MarkLeaveDialog } from '../components/MarkLeaveDialog';
 // DISABLED (Requests & Leaves): commented out for now, re-enable later.
 // import { useRequests } from '@/features/requests/hooks/useRequests';
 // import { RequestFormDialog } from '@/features/requests/components/RequestFormDialog';
@@ -36,9 +37,12 @@ export function AttendanceDetailPage() {
   // const { data: dayRequests = [] } = useRequests({ employeeId: employeeId ?? '', date });
   const toast = useToast();
   const deleteManual = useDeleteManualAttendance();
+  const removeLeaveMark = useRemoveLeaveMark();
   const [manualOpen, setManualOpen] = useState(false);
   // const [requestType, setRequestType] = useState<'MISSING_PUNCH' | 'REGULARIZATION' | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [markLeaveOpen, setMarkLeaveOpen] = useState(false);
+  const [confirmUndoLeave, setConfirmUndoLeave] = useState(false);
   // const [selectedRequest, setSelectedRequest] = useState<AttendanceRequest | null>(null);
 
   const basePath = user?.role === 'ADMIN' ? '/admin' : '/hr';
@@ -46,6 +50,8 @@ export function AttendanceDetailPage() {
   const canManage = !!user && hasPermission(user.role, 'attendance:manage') && date <= todayISO();
   // const canRequest = !!user && hasPermission(user.role, 'requests:create') && date <= todayISO();
   // const needsFix = record && ['INCOMPLETE', 'ABSENT', 'LATE', 'EARLY_OUT'].includes(record.status);
+  const canMarkLeave = canManage && record?.status === 'ABSENT';
+  const canUndoLeave = canManage && record?.status === 'ON_LEAVE' && record?.leaveSource === 'DIRECT';
 
   async function handleDeleteManual() {
     try {
@@ -55,6 +61,17 @@ export function AttendanceDetailPage() {
       toast.error('Could not delete entry', err instanceof Error ? err.message : undefined);
     } finally {
       setConfirmDelete(false);
+    }
+  }
+
+  async function handleUndoLeave() {
+    try {
+      await removeLeaveMark.mutateAsync({ employeeId: employeeId ?? '', date });
+      toast.success('Leave mark removed', 'Attendance reverted to Absent');
+    } catch (err) {
+      toast.error('Could not undo leave', err instanceof Error ? err.message : undefined);
+    } finally {
+      setConfirmUndoLeave(false);
     }
   }
 
@@ -94,6 +111,16 @@ export function AttendanceDetailPage() {
             )
           )}
           */}
+          {canMarkLeave && (
+            <Button variant="outline" size="sm" leftIcon={<CalendarCheck className="h-4 w-4" />} onClick={() => setMarkLeaveOpen(true)}>
+              Mark as Leave
+            </Button>
+          )}
+          {canUndoLeave && (
+            <Button variant="outline" size="sm" leftIcon={<CalendarX className="h-4 w-4" />} onClick={() => setConfirmUndoLeave(true)}>
+              Undo Leave Mark
+            </Button>
+          )}
           {canManage && record?.isManual && (
             <Button variant="outline" size="sm" leftIcon={<Trash2 className="h-4 w-4" />} onClick={() => setConfirmDelete(true)}>
               Delete Manual Entry
@@ -247,6 +274,25 @@ export function AttendanceDetailPage() {
         </Card>
       )}
 
+      {record?.status === 'ON_LEAVE' && (
+        <Card className="mt-4">
+          <CardHeader title="Leave Details" subtitle="Why this day is marked as leave" />
+          <CardBody className="text-sm space-y-1.5">
+            <p>
+              <span className="text-surface-400">Type: </span>
+              {LEAVE_TYPE_LABEL[record.leaveType as LeaveType] ?? record.leaveType}
+              <Badge variant={record.leaveSource === 'DIRECT' ? 'brand' : 'info'} size="sm" className="ml-2">
+                {record.leaveSource === 'DIRECT' ? 'Pre-approved (direct)' : 'Approved request'}
+              </Badge>
+            </p>
+            {record.leaveReason && <p><span className="text-surface-400">Reason: </span>{record.leaveReason}</p>}
+            {(record.leaveMarkedBy || record.leaveMarkedAt) && (
+              <p className="text-xs text-surface-400">{record.leaveMarkedBy}{record.leaveMarkedAt && ` · ${formatDateTime(record.leaveMarkedAt)}`}</p>
+            )}
+          </CardBody>
+        </Card>
+      )}
+
       {/* DISABLED (Requests & Leaves): re-enable later.
       {dayRequests.length > 0 && (
         <Card className="mt-4">
@@ -293,6 +339,24 @@ export function AttendanceDetailPage() {
         description={`Remove the manual punches for ${employee?.fullName ?? 'this employee'} on ${formatDate(date)}? The day reverts to what the device recorded.`}
         confirmLabel="Delete"
         loading={deleteManual.isPending}
+      />
+      {canMarkLeave && (
+        <MarkLeaveDialog
+          open={markLeaveOpen}
+          onClose={() => setMarkLeaveOpen(false)}
+          employeeId={employeeId ?? ''}
+          employeeName={employee?.fullName ?? 'this employee'}
+          date={date}
+        />
+      )}
+      <ConfirmDialog
+        open={confirmUndoLeave}
+        onClose={() => setConfirmUndoLeave(false)}
+        onConfirm={handleUndoLeave}
+        title="Undo Leave Mark"
+        description={`Remove the pre-approved leave mark for ${employee?.fullName ?? 'this employee'} on ${formatDate(date)}? The day reverts to Absent.`}
+        confirmLabel="Undo"
+        loading={removeLeaveMark.isPending}
       />
     </div>
   );

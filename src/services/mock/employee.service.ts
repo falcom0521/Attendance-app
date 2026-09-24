@@ -62,7 +62,10 @@ export const employeeService = {
   async createEmployee(payload: CreateEmployeePayload): Promise<Employee> {
     await sleep(600);
     const subCompany = mockSubCompanies.find((sc) => sc.id === payload.subCompanyId);
-    const shift = payload.shiftId ? mockShifts.find((s) => s.id === payload.shiftId) : undefined;
+    if (!payload.shiftId) throw new Error('Select a shift for this employee');
+    const shift = mockShifts.find((s) => s.id === payload.shiftId);
+    if (!shift) throw new Error('Selected shift not found');
+    if (shift.subCompanyId !== payload.subCompanyId) throw new Error('Shift does not belong to the selected sub company');
     const newEmp: Employee = {
       ...payload,
       id: `emp-${String(employees.length + 1).padStart(3, '0')}`,
@@ -83,7 +86,14 @@ export const employeeService = {
     await sleep(500);
     const idx = employees.findIndex((e) => e.id === id);
     if (idx === -1) throw new Error('Employee not found');
-    const shift = payload.shiftId ? mockShifts.find((s) => s.id === payload.shiftId) : undefined;
+    let shift = undefined;
+    if ('shiftId' in payload) {
+      if (!payload.shiftId) throw new Error('Select a shift for this employee');
+      shift = mockShifts.find((s) => s.id === payload.shiftId);
+      if (!shift) throw new Error('Selected shift not found');
+      const subCompanyId = payload.subCompanyId ?? employees[idx].subCompanyId;
+      if (shift.subCompanyId !== subCompanyId) throw new Error('Shift does not belong to the selected sub company');
+    }
     employees[idx] = {
       ...employees[idx],
       ...payload,

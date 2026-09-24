@@ -44,6 +44,7 @@ export interface CreateEmployeePayload {
   joiningDate: string;
   status: Status;
   subCompanyId: string;
-  shiftId?: string;
+  /** Required: every employee must be assigned a shift so attendance can be calculated. */
+  shiftId: string;
   weeklyOff: string[];
 }

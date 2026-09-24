@@ -1,4 +1,5 @@
 import { Users, Clock, XCircle, AlertTriangle, GitBranch, Monitor } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { StatCard } from '@/components/ui/StatCard';
 import { Card, CardHeader, CardBody } from '@/components/ui/Card';
 import { AttendanceTrendChart } from '@/components/charts/AttendanceTrendChart';
@@ -9,9 +10,11 @@ import { useAdminDashboard } from '../hooks/useDashboard';
 import { useAuthStore } from '@/store/authStore';
 import { useUIStore } from '@/store/uiStore';
 import { useSubCompaniesByCompany } from '@/features/companies/hooks/useCompanies';
+import { todayISO } from '@/utils/date';
 
 export function AdminDashboard() {
   const { user } = useAuthStore();
+  const navigate = useNavigate();
   const { selectedSubCompanyId } = useUIStore();
   const { data: subCompanies = [] } = useSubCompaniesByCompany(user?.companyId ?? '');
   const selectedSub = subCompanies.find((sc) => sc.id === selectedSubCompanyId);
@@ -22,7 +25,13 @@ export function AdminDashboard() {
   );
 
   const scopeLabel = selectedSub ? selectedSub.name : 'All Sub Companies';
-  const employeeSubtitle = selectedSub ? selectedSub.name : 'Across all branches';
+  const employeeSubtitle = selectedSub ? selectedSub.name : 'All branches';
+
+  const toAttendance = (status?: string) => {
+    const params = new URLSearchParams({ date: todayISO() });
+    if (status) params.set('status', status);
+    navigate(`/admin/attendance?${params.toString()}`);
+  };
 
   // Convert departmentDistribution to DepartmentAttendanceChart format
   const deptAttendance = (data?.departmentDistribution ?? []).map((d) => ({
@@ -50,46 +59,50 @@ export function AdminDashboard() {
         ) : (
           <>
             <StatCard
-              title="Total Employees"
+              title="Employees"
               value={data?.totalEmployees ?? 0}
               icon={<Users className="h-5 w-5" />}
               color="blue"
               subtitle={employeeSubtitle}
+              onClick={() => toAttendance()}
             />
             <StatCard
-              title="Present Today"
+              title="Present"
               value={data?.presentToday ?? 0}
               icon={<Clock className="h-5 w-5" />}
               color="green"
-              subtitle="On time + late"
+              subtitle="On time"
+              onClick={() => toAttendance('PRESENT')}
             />
             <StatCard
-              title="Absent Today"
+              title="Absent"
               value={data?.absentToday ?? 0}
               icon={<XCircle className="h-5 w-5" />}
               color="red"
-              subtitle="No punch recorded"
+              subtitle="No punch"
+              onClick={() => toAttendance('ABSENT')}
             />
             <StatCard
-              title="Late Today"
+              title="Late"
               value={data?.lateToday ?? 0}
               icon={<AlertTriangle className="h-5 w-5" />}
               color="yellow"
-              subtitle="Past grace period"
+              subtitle="Past grace"
+              onClick={() => toAttendance('LATE')}
             />
             <StatCard
-              title="Sub Companies"
+              title="Branches"
               value={data?.totalSubCompanies ?? 0}
               icon={<GitBranch className="h-5 w-5" />}
               color="purple"
-              subtitle="Active branches"
+              subtitle="Active"
             />
             <StatCard
-              title="Total Devices"
+              title="Devices"
               value={data?.totalDevices ?? 0}
               icon={<Monitor className="h-5 w-5" />}
               color="cyan"
-              subtitle="Punch devices"
+              subtitle="Registered"
             />
           </>
         )}
